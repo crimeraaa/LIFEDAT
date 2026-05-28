@@ -1,0 +1,101 @@
+ID,Name,Sex,Smokes,Height,Weight,Birth,State,Grade,Died,Score,Date.Entered.Study,Age,BMI,Overweight
+AC/AH/001,Michael,Male,Non-Smoker,182.87,76.57,2/6/72,Georgia,2,FALSE,0.01,12/1/15,44,22.9,FALSE
+AC/AH/017,Derek,Male,Non-Smoker,179.12,80.43,6/15/72,Colorado,2,FALSE,-1.31,12/1/15,43,25.07,TRUE
+AC/AH/020,Todd,Male,Non-Smoker,169.15,75.48,7/9/72,New Jersey,2,FALSE,-0.17,12/1/15,43,26.38,TRUE
+AC/AH/022,Ronald,Male,Non-Smoker,175.66,94.54,8/17/72,Colorado,1,FALSE,-1.1,12/1/15,43,30.64,TRUE
+AC/AH/029,Christine,Female,Non-Smoker,164.47,71.78,6/12/73,Georgia,2,TRUE,1.42,12/1/15,42,26.54,TRUE
+AC/AH/033,Dana,Female,Smoker,158.27,69.9,7/1/73,Indiana,2,FALSE,0.29,12/1/15,42,27.9,TRUE
+AC/AH/037,Erin,Female,Non-Smoker,161.69,68.85,3/26/72,New York,1,FALSE,0.16,12/1/15,44,26.34,TRUE
+AC/AH/044,Rachel,Female,Non-Smoker,165.84,70.44,5/11/73,Colorado,1,FALSE,-0.07,12/1/15,42,25.61,TRUE
+AC/AH/045,Ronald,Male,Non-Smoker,181.32,76.9,12/31/71,Georgia,1,FALSE,-1.43,12/1/15,44,23.39,FALSE
+AC/AH/048,Bryan,Male,Non-Smoker,167.37,79.06,7/19/73,New Jersey,2,FALSE,0.54,12/31/15,42,28.22,TRUE
+AC/AH/049,Kimberly,Female,Non-Smoker,160.06,72.37,5/4/72,Georgia,2,TRUE,-2.41,12/31/15,44,28.25,TRUE
+AC/AH/050,Pamela,Female,Non-Smoker,166.48,67.34,11/14/71,New Jersey,1,FALSE,1.05,12/31/15,44,24.3,FALSE
+AC/AH/052,Kenneth,Male,Smoker,175.39,92.22,3/22/72,Colorado,3,FALSE,-0.04,12/31/15,44,29.98,TRUE
+AC/AH/053,Stacy,Female,Smoker,164.7,75.69,11/22/71,Colorado,1,FALSE,-0.65,12/31/15,44,27.9,TRUE
+AC/AH/057,Elizabeth,Female,Smoker,163.79,65.76,1/12/72,New Jersey,3,FALSE,0.06,12/31/15,44,24.51,FALSE
+AC/AH/061,Marc,Male,Non-Smoker,181.13,72.33,11/22/72,New York,NA,TRUE,-0.15,12/31/15,43,22.05,FALSE
+AC/AH/063,Brandon,Male,Non-Smoker,169.24,73.3,11/22/71,New Jersey,3,FALSE,0.68,12/31/15,44,25.59,TRUE
+AC/AH/076,Travis,Male,Non-Smoker,176.22,97.67,4/14/73,New Jersey,2,FALSE,-1.97,12/31/15,43,31.45,TRUE
+AC/AH/077,Andrew,Male,Non-Smoker,174.09,72.2,2/7/73,California,3,FALSE,-1.18,12/31/15,43,23.82,FALSE
+AC/AH/086,Jeffrey,Male,Smoker,180.11,75.72,5/18/73,New York,3,FALSE,0.4,12/31/15,42,23.34,FALSE
+AC/AH/089,Jimmy,Male,Non-Smoker,179.24,75.54,3/17/72,New Jersey,2,TRUE,-0.47,12/31/15,44,23.51,FALSE
+AC/AH/100,Tara,Female,Non-Smoker,161.92,69.92,1/2/73,Indiana,1,FALSE,0.5,12/31/15,43,26.67,TRUE
+AC/AH/104,Thomas,Male,Smoker,169.85,90.63,4/18/72,New York,1,TRUE,-0.2,12/31/15,44,31.42,TRUE
+AC/AH/112,Paula,Female,Non-Smoker,160.57,63.54,7/2/73,New York,NA,TRUE,0.69,1/31/16,42,24.64,FALSE
+AC/AH/113,Sandra,Female,Non-Smoker,168.24,69.57,2/13/72,California,2,FALSE,0.38,1/31/16,44,24.58,FALSE
+AC/AH/114,Mark,Male,Non-Smoker,177.75,74.84,11/25/72,Indiana,3,FALSE,0.15,1/31/16,43,23.69,FALSE
+AC/AH/115,Steven,Male,Smoker,183.21,83.36,10/5/73,New York,2,FALSE,0.05,1/31/16,42,24.83,FALSE
+AC/AH/127,George,Male,Non-Smoker,167.75,82.06,11/4/72,New York,1,TRUE,0.63,1/31/16,43,29.16,TRUE
+AC/AH/133,Steven,Male,Non-Smoker,181.15,83.93,10/19/73,New York,3,TRUE,-0.81,3/2/16,42,25.58,TRUE
+AC/AH/150,Brandon,Male,Smoker,181.56,79.54,5/9/72,Georgia,1,TRUE,0.92,3/2/16,44,24.13,FALSE
+AC/AH/154,Julie,Female,Non-Smoker,160.03,64.3,9/5/73,New Jersey,1,TRUE,-0.1,3/2/16,42,25.11,TRUE
+AC/AH/156,Aaron,Male,Non-Smoker,165.62,76.72,7/15/72,Georgia,1,TRUE,0.61,3/2/16,43,27.97,TRUE
+AC/AH/159,Jeffery,Male,Non-Smoker,181.64,96.91,12/10/72,Colorado,2,FALSE,-0.39,3/2/16,43,29.37,TRUE
+AC/AH/160,Kristen,Female,Non-Smoker,159.67,71.88,9/28/73,New York,2,TRUE,0.74,3/2/16,42,28.19,TRUE
+AC/AH/164,Brett,Male,Smoker,177.03,74.04,2/24/72,Indiana,2,FALSE,0.15,3/2/16,44,23.63,FALSE
+AC/AH/171,Teresa,Female,Non-Smoker,163.35,70.46,4/22/73,Indiana,3,TRUE,1.68,3/31/16,43,26.41,TRUE
+AC/AH/176,Brent,Male,Non-Smoker,175.21,83.65,5/7/73,New York,3,TRUE,0.41,3/31/16,43,27.25,TRUE
+AC/AH/180,Tiffany,Female,Non-Smoker,160.8,64.77,2/24/73,New York,1,TRUE,-2.17,3/31/16,43,25.05,TRUE
+AC/AH/185,Joel,Male,Non-Smoker,166.46,76.83,8/23/72,New Jersey,NA,TRUE,-1.32,3/31/16,43,27.73,TRUE
+AC/AH/186,Michelle,Female,Non-Smoker,157.95,67.41,5/12/72,Georgia,3,TRUE,-1.89,3/31/16,43,27.02,TRUE
+AC/AH/192,Aaron,Male,Non-Smoker,180.61,83.59,3/30/72,California,3,TRUE,-0.6,3/31/16,44,25.63,TRUE
+AC/AH/198,Brandy,Female,Non-Smoker,159.52,67.99,12/8/72,New York,2,FALSE,-0.4,3/31/16,43,26.72,TRUE
+AC/AH/207,Kristina,Female,Non-Smoker,163.01,65.19,5/23/73,Georgia,2,FALSE,1.07,3/31/16,42,24.53,FALSE
+AC/AH/208,Catherine,Female,Non-Smoker,165.8,71.77,8/13/73,California,1,FALSE,-1.21,3/31/16,42,26.11,TRUE
+AC/AH/210,Alicia,Female,Smoker,170.03,66.68,9/3/72,New Jersey,NA,FALSE,-0.66,3/31/16,43,23.06,FALSE
+AC/AH/211,Sherry,Female,Non-Smoker,157.16,69.64,7/20/73,California,2,TRUE,-0.7,5/1/16,42,28.2,TRUE
+AC/AH/213,Tanya,Female,Smoker,164.58,72.99,1/31/72,New York,1,FALSE,-0.32,5/1/16,44,26.95,TRUE
+AC/AH/219,Nancy,Female,Non-Smoker,163.47,72.89,4/13/72,Indiana,1,TRUE,0.33,5/1/16,44,27.28,TRUE
+AC/AH/220,Charles,Male,Non-Smoker,185.43,87.23,7/19/73,New York,1,FALSE,1.29,5/1/16,42,25.37,TRUE
+AC/AH/221,Linda,Female,Non-Smoker,165.34,70.84,2/7/72,Georgia,NA,TRUE,1.69,5/1/16,44,25.91,TRUE
+AC/AH/225,Nicole,Female,Non-Smoker,163.45,67.67,10/27/72,Indiana,2,FALSE,-0.74,5/1/16,43,25.33,TRUE
+AC/AH/233,Wendy,Female,Non-Smoker,163.97,66.71,12/29/71,New York,3,TRUE,-1.07,5/1/16,44,24.81,FALSE
+AC/AH/241,April,Female,Non-Smoker,161.38,73.55,2/14/72,Indiana,3,FALSE,-0.82,5/31/16,44,28.24,TRUE
+AC/AH/244,Barbara,Female,Non-Smoker,160.09,65.93,1/31/73,New York,NA,TRUE,0.5,5/31/16,43,25.72,TRUE
+AC/AH/248,Brandon,Male,Non-Smoker,178.64,97.05,1/18/73,Indiana,1,TRUE,-1.21,5/31/16,43,30.41,TRUE
+AC/AH/249,Holly,Female,Smoker,159.78,68.31,4/29/72,New Jersey,2,TRUE,0.52,5/31/16,44,26.76,TRUE
+AC/SG/002,Stacy,Female,Smoker,161.57,67.92,7/9/73,Indiana,3,FALSE,0.33,5/31/16,42,26.02,TRUE
+AC/SG/003,Kelly,Female,Non-Smoker,161.83,66.03,7/17/72,Indiana,2,TRUE,-0.9,5/31/16,43,25.21,TRUE
+AC/SG/008,Shawn,Male,Smoker,169.66,77.3,6/1/73,Indiana,1,TRUE,-2.36,5/31/16,42,26.85,TRUE
+AC/SG/009,Anthony,Male,Non-Smoker,166.84,88.25,3/10/72,Colorado,1,FALSE,1.51,7/1/16,44,31.7,TRUE
+AC/SG/010,Sherry,Female,Non-Smoker,159.32,64.92,2/4/73,Georgia,2,TRUE,0.71,7/1/16,43,25.58,TRUE
+AC/SG/015,Jeffery,Male,Smoker,170.51,84.35,11/15/72,New Jersey,3,TRUE,0.12,7/1/16,43,29.01,TRUE
+AC/SG/016,Valerie,Female,Non-Smoker,161.84,69.97,4/9/72,California,3,TRUE,-0.57,7/1/16,44,26.71,TRUE
+AC/SG/046,Jimmy,Male,Non-Smoker,171.41,81.7,8/11/73,Georgia,2,TRUE,0.43,7/1/16,42,27.81,TRUE
+AC/SG/055,Jeffrey,Male,Non-Smoker,166.75,79.06,3/1/72,Colorado,3,TRUE,-0.55,7/31/16,44,28.43,TRUE
+AC/SG/056,Tiffany,Female,Smoker,166.19,67.46,12/3/72,California,3,TRUE,-1.06,7/31/16,43,24.43,FALSE
+AC/SG/064,Steven,Male,Non-Smoker,169.16,90.08,10/10/72,Indiana,2,TRUE,-0.1,7/31/16,43,31.48,TRUE
+AC/SG/065,Brandy,Female,Non-Smoker,157.01,66.56,4/11/72,Colorado,3,TRUE,0.64,7/31/16,44,27,TRUE
+AC/SG/067,Jon,Male,Non-Smoker,167.51,84.15,7/25/72,New York,2,TRUE,-1.46,7/31/16,43,29.99,TRUE
+AC/SG/068,Sarah,Female,Non-Smoker,160.47,68.2,4/21/72,Georgia,3,TRUE,0.83,7/31/16,44,26.48,TRUE
+AC/SG/072,Barbara,Female,Smoker,162.33,66.47,2/21/72,New Jersey,3,FALSE,1.02,7/31/16,44,25.22,TRUE
+AC/SG/074,James,Male,Non-Smoker,175.67,88.82,10/10/73,New Jersey,NA,FALSE,-3.14,7/31/16,42,28.78,TRUE
+AC/SG/084,Marc,Male,Non-Smoker,174.25,80.93,3/12/72,Colorado,2,TRUE,1.79,7/31/16,44,26.65,TRUE
+AC/SG/095,Mary,Female,Non-Smoker,158.94,65.14,6/1/73,Colorado,1,FALSE,0.47,7/31/16,42,25.79,TRUE
+AC/SG/099,Richard,Male,Non-Smoker,172.72,67.62,2/10/72,Georgia,1,FALSE,0.05,7/31/16,44,22.67,FALSE
+AC/SG/101,Erica,Female,Non-Smoker,159.23,69.96,10/4/73,California,2,TRUE,-0.81,7/31/16,42,27.59,TRUE
+AC/SG/107,Benjamin,Male,Non-Smoker,176.54,90.76,2/3/73,Indiana,3,FALSE,-1.48,8/31/16,43,29.12,TRUE
+AC/SG/116,Joel,Male,Non-Smoker,184.34,90.41,6/11/72,California,3,TRUE,-1.41,8/31/16,43,26.61,TRUE
+AC/SG/121,Carrie,Female,Non-Smoker,163.94,71.47,3/18/73,New York,3,FALSE,-0.25,8/31/16,43,26.59,TRUE
+AC/SG/122,Alicia,Female,Non-Smoker,160.09,68.94,12/22/71,Indiana,1,FALSE,-0.99,8/31/16,44,26.9,TRUE
+AC/SG/123,Paula,Female,Smoker,162.32,72.72,9/9/72,Indiana,1,TRUE,-0.92,8/31/16,43,27.6,TRUE
+AC/SG/134,Stacy,Female,Smoker,162.59,69.76,6/3/72,Colorado,2,TRUE,-0.28,8/31/16,43,26.39,TRUE
+AC/SG/139,Todd,Male,Non-Smoker,171.94,82.11,10/12/73,New York,1,FALSE,-1.18,8/31/16,42,27.77,TRUE
+AC/SG/142,Brenda,Female,Non-Smoker,158.07,69.8,5/21/72,California,3,FALSE,0.54,8/31/16,43,27.94,TRUE
+AC/SG/155,Laura,Female,Non-Smoker,158.35,69.72,6/8/72,New Jersey,3,TRUE,1.42,8/31/16,43,27.8,TRUE
+AC/SG/165,Laura,Female,Non-Smoker,162.18,67.81,3/31/72,Indiana,1,TRUE,1.68,8/31/16,44,25.78,TRUE
+AC/SG/167,Suzanne,Female,Non-Smoker,159.38,70.37,10/6/73,Georgia,2,TRUE,0.02,10/1/16,42,27.7,TRUE
+AC/SG/172,Troy,Male,Non-Smoker,171.45,84.29,3/2/72,Colorado,2,TRUE,-0.19,10/1/16,44,28.67,TRUE
+AC/SG/173,Barbara,Female,Smoker,163.17,64.47,6/25/73,Indiana,2,FALSE,0.69,10/1/16,42,24.21,FALSE
+AC/SG/179,Russell,Male,Non-Smoker,183.1,82.47,10/30/72,New Jersey,3,TRUE,0.77,10/1/16,43,24.6,FALSE
+AC/SG/181,Philip,Male,Non-Smoker,177.14,88.7,11/30/71,Georgia,3,TRUE,1.76,10/1/16,44,28.27,TRUE
+AC/SG/182,Stephen,Male,Smoker,171.08,72.51,3/31/73,New Jersey,3,TRUE,-0.22,10/1/16,43,24.77,FALSE
+AC/SG/191,Holly,Female,Non-Smoker,159.33,70.68,6/27/73,New Jersey,3,TRUE,-1.07,10/1/16,42,27.84,TRUE
+AC/SG/193,Douglas,Male,Smoker,185.43,73.63,6/11/73,New York,3,FALSE,-0.29,10/1/16,42,21.41,FALSE
+AC/SG/194,Christy,Female,Non-Smoker,162.65,73.99,8/10/72,Colorado,3,FALSE,0.87,10/31/16,43,27.97,TRUE
+AC/SG/197,Jill,Female,Non-Smoker,159.44,66.21,11/14/72,New York,1,TRUE,1.21,10/31/16,43,26.05,TRUE
+AC/SG/204,Rhonda,Female,Non-Smoker,164.11,70.66,6/23/72,New Jersey,3,FALSE,-0.17,10/31/16,43,26.24,TRUE
+AC/SG/216,Wendy,Female,Non-Smoker,159.13,66.96,6/25/72,Georgia,1,TRUE,0.95,10/31/16,43,26.44,TRUE
+AC/SG/217,Sharon,Female,Non-Smoker,160.58,71.49,11/17/72,New Jersey,1,TRUE,-0.78,10/31/16,43,27.72,TRUE
+AC/SG/234,Cheryl,Female,Non-Smoker,164.88,68.07,11/16/71,Colorado,3,TRUE,0.35,10/31/16,44,25.04,TRUE
