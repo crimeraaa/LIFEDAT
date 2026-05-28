@@ -1,4 +1,5 @@
-*.R*
+*.Rdata
+*.Rhistory
 *.pdf
 *.doc*
 *.png
