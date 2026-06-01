@@ -1,7 +1,7 @@
 ---
 title: "Acitivy 03: Summary statistics, frequency distribution, and basic graphical representation"
 author: "Jerome Poblete"
-date: "01 June 2026"
+date: "28 May 2026"
 output: html_document
 ---
 
@@ -12,7 +12,7 @@ knitr::opts_chunk$set(message=FALSE)
 
 # A. Read and perform descriptive statistics
 
-1. Read in the CSV file
+## 1. Read in the CSV file
 
 We use the base R function `read.csv()`, which returns a `data.frame`.
 The data is cleaned prior to performing any tasks.
@@ -20,7 +20,7 @@ We do **not** clean the data in Excel but rather do it all in R via its subset
 operations.
 
 ```{r df-init}
-# NOTE: Ensure the CSV file is in the parent directory!
+# NOTE: Ensure the CSV file is in the parent directory of this HTML!
 df <- read.csv("../herpetozoa-033-095-s001.csv")
 df <- df[complete.cases(df), ]
 ```
@@ -31,7 +31,7 @@ Also recall than these 'indexes' can be logical data frames themselves.
 So the line `df[complete.cases(df), ]` selects all rows with non-empty data
 and selects all their columns as we assume all column headers are valid.
 
-2. Show the data structure
+## 2. Show the data structure
 
 Printing builtin data structures in simple enough. Their type name can be
 retrieved via `class()` and a simple representation via `str()`. If there is
@@ -43,7 +43,7 @@ class(df)
 str(df)
 ```
 
-3. Subset the elevation data
+## 3. Subset the elevation data
 
 Like before we use the R subset operations to filter from the given data frame.
 We are selecting all rows of the `Elev` column specifically.
@@ -61,7 +61,7 @@ sd(elev.data)
 range(elev.data)
 ```
 
-4. Subset the species data
+## 4. Subset the species data
 
 # B. Graphical representation
 
@@ -70,7 +70,7 @@ species.min = "Babu"
 species.max = "Phlo"
 ```
 
-1. Scatterplot
+## 1. Scatterplot
 
 We create a scatter plot of total species count, elevation, and habitat types
 using the base R `plot()`function. We also colorize it for better visualization.
@@ -87,7 +87,7 @@ plot(x    = df[, "Elev"],
      pch  = 17)
 ```
 
-2. Bar plot
+## 2. Bar plot
 
 We create a bar plot of habitat type and species count using the base R
 `barplot()` function.
@@ -101,7 +101,7 @@ barplot(
 )
 ```
 
-3. Histogram
+## 3. Histogram
 
 We create a histogram of the frequency of each species total count using the
 base R `hist()` function.
@@ -111,10 +111,16 @@ hist(df[, "SPPTotal"], xlab="Species count total", main="Species count total fre
 ```
 
 # C. Interpretation
+> Based on the summary statistics and preliminary graphs you just created,
+> how do you describe the relationship between the following:
+>
+> 1. total species observed
+> 2. habitat types
+> 3. elevation
 
 The total count of species observed seems to have a very loose inverse
 relationship with elevation.
-That is, in the Elevation-Species total count scatterplot, increasing elevation
+That is, in the Elevation-Species total count scatter plot, increasing elevation
 leads to decrease in species count.
 Species also seem to be most abundant at ASG and least abundant at CVT.
 This may explain by lower counts of species are more common than higher ones as

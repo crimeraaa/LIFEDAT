@@ -1,0 +1,174 @@
+---
+title: "Activity 04: Tidyverse"
+author: "Jerome Poblete"
+date: "25 May 2026"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE)
+```
+
+# A. Read and filter out
+## 1. Install tidyverse and load
+
+First load the `tidyverse` library.
+
+```{r ht-init, message=FALSE}
+# install.packages("tidyverse")
+library(tidyverse)
+```
+
+
+## 2. Read in the CSV file as a data frame
+
+Load the habitat types data set using the base R `read.csv()` function.
+
+```{r ht-read}
+# NOTE: Ensure this file is found in the parent directory of this HTML.
+ht <- read.csv("../habitat_types.csv")
+```
+
+## 3. Show the data using the tidyverse equivalent of base R `str`
+
+Here we are introduced to the R pipe operator `|>`.
+There is the more archaic `%>%` but the modern version `|>` is more succinct.
+It allows us to pass the left hand side as the first argument to the function
+call on the right hand side.
+
+So the following code (and output):
+
+```{r}
+ht |> glimpse()
+```
+
+Is equivalent to:
+
+```{r, eval=FALSE}
+glimpse(ht)
+```
+
+The pipe operator is arguably cleaner and aids in readability when many
+function calls are chained together but constantly operate on the same input.
+If you're curious, read on 'Tidy Evaluation'.
+
+## 4. Subset the data with some elect columns
+
+We are also introduced to the Tidyverse concept of 'quosures'. These are
+unquoted strings which can implicitly refer to the main data set's fields.
+That is, instead of constantly writing `ht$Htypes`, Tidyverse functions can
+simply receive the identifier `Htypes` or the string `"Htypes"` and work out
+that you want the field of `ht` as it was passed as the first argument.
+
+So the following code:
+
+```{r}
+ht2 <- ht |> select(Transect, Htypes, SmallTrees, FloweringTrees)
+```
+
+Is equivalent to both of the following:
+
+```{r, eval=FALSE}
+ht2 <- select(ht, Transect, Htypes, SmallTrees, FloweringTrees)
+ht3 <- select(ht, "Transect", "Htypes", "SmallTrees", "FloweringTrees")
+```
+
+## 5. Filter by habitat type and sort by small trees
+
+The dplyr `filter()` function also allows you to use 'quosures'. And just
+like in base R, the subset can be a logical expression so that you extract
+only the entries that meet the specified condition.
+
+The dplyr `arrange()` function works similarly. The argument is a lazily
+evaluated expression. See the dplyr function `?desc`.
+
+So the following code:
+
+```{r}
+cvt <- ht2 |> filter(Htypes == "CVT") |> arrange(desc(SmallTrees))
+```
+
+Is equivalent to:
+
+```{r, eval=FALSE}
+tmp <- filter(ht2, ht2$Htypes == "CVT")
+cvt <- arrange(tmp, desc(tmp$SmallTrees))
+```
+
+Hopefully you can now see why the pipe operator is useful. Without it,
+we had to save the result of `filter()` in a variable in order to
+pass it to `desc()` and `arrange()`! Otherwise you'd need to copy the call
+to `filter()` multiple times.
+
+We can then find out which transects have the highest counts of small trees.
+
+```{r}
+cvt
+```
+
+In the above table, we can see that the highest count of small trees is ten (10)
+from transects IT2P7 and IT3P0.
+
+## 6. Calculate the mean number of flowering trees per habitat
+
+A new `data.frame` is created using the dplyr `summarize()` function.
+All named arguments (aside from `.data`, .by` and `.groups`) represent the
+row name and column data to be used.
+
+```{r}
+ftrees <- ht2 |> group_by(Htypes) |> summarize(mean_ft=mean(FloweringTrees))
+ftrees
+```
+
+The habitat types that do not differ significantly in the mean number of
+flowering trees are ASG and ESG, at 5.26 and 5.38 flowering trees,
+respectively. CVT on the other hand has an average of 8.86 flowering trees
+ making it more than 3.00 higher than the other 2.
+
+## 7. Add a new column for the difference between herb and ground cover
+
+We use the dplyr `mutate()` function to add a new column to the input data.
+The original data is modified, which is why we created `ht2` to avoid messing
+with `ht`.
+
+```{r}
+sel_df_mod <- ht2 |> mutate(HerbGroundDiff = ht$HerbsCover - ht$GroundCover)
+```
+
+The following transects have no difference:
+
+```{r}
+sel_df_mod |> filter(HerbGroundDiff == 0)
+```
+
+## 8. Convert `sel_df_mod` to a wider output
+
+The dplyr `pivot_wider()` function allows you to 'expand' the given input.
+Providing the named argument `names_from` will provide the suffix for the
+column titles for the values in `values_from`.
+
+Each column titel is a combination of a value in `values_from` and `names_from`
+Many values here will be `NA` as each transect has only 1 habitat types. So
+the combinations with the non-existent habitat type, e.g. IT1P0 with CVT will
+be `NA`.
+
+```{r}
+sel_df_mod |> pivot_wider(
+  names_from  = Htypes,
+  values_from = c(SmallTrees, FloweringTrees, HerbGroundDiff, SmallTrees))
+```
+
+# B. Reflection
+> How does using tidyverse compare to Activity 03, which primarily used 
+> Base R? Which functions do you find more intuitive, and which ones are
+> less so?
+
+I felt that the data frame manipulation functions were a lot easier to
+follow especially since we now know about the pipe operator. `filter()`,
+`arrange()`, `group_by()` and `summarize()` are very helpful since in
+Activity 03 I was confused on how to achieve the same results in plain R.
+
+However I'm still trying to wrap my head around `pivot_longer()` and
+`pivot_wider()` because they do so much, kind of like the plot functions
+we had to to learn how to use back in Activity 03. I think with a bit more
+practice these will become more intuiive.
