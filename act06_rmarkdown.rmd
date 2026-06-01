@@ -1,0 +1,85 @@
+---
+title: "My First Rmarkdown"
+author: "Christian Supsup"
+date: "01 June 2021"
+output: html_document
+---
+
+# Markdown syntax (Header 1)
+
+## Markdonw syntax (Header 2)
+
+**Bold font**
+
+*Italic font*
+
+## Rmarkdown setup: install required packages
+```{r setup}
+#install.packages("rmarkdown")
+#install.packages(c("rmarkdown", "knitr"))
+
+## Mac requires MacTeX: https://www.tug.org/mactex/?utm_source=chatgpt.com
+## Windows requires TeX Live: https://www.tug.org/texlive/?utm_source=chatgpt.com
+```
+
+## Code chunks
+
+Some code chunk instructions:
+
+**echo** (echo = TRUE) - is the code displayed alongside the results?
+
+**warning** (warning = TRUE) - are warning messages displayed?
+
+**fig.width, fig.height** (fig.width = 7) - what width/height (in inches) are the plots?
+
+**fig.aling** (fig.align = "left") - left, right, and center alignment
+
+
+```{r chunks, echo = TRUE, warning = TRUE}
+## Run/render rmarkdown
+#rmarkdown::render("act06_rmarkdown.rmd")
+```
+
+## Inserting figures
+```{r figs, fig.width = 4, fig.height = 3}
+A <- c("a", "a", "b", "b")
+B <- c(5, 10, 15, 20)
+df <- data.frame(A, B)
+print(df)
+boxplot(B~A,data=df)
+```
+
+## Inserting tables
+```{r tables}
+## Using R standard print
+df
+
+## Using kable() function
+library(knitr)
+kable(df, digits = 2)
+
+## Using pander
+library(pander)
+plant <- c("a", "b", "c")
+temperature <- c(20, 20, 20)
+growth <- c(0.65, 0.95, 0.15)
+df <- data.frame(plant, temperature, growth)
+emphasize.italics.cols(3)   ## Make the 3rd column italics
+pander(df)           ## Create the table
+```
+
+Manually creating a table
+
+| Plant | Temp. | Growth |
+|:------|:-----:|-------:|
+| A     | 20    | 0.65   |
+| B     | 20    | 0.95   |
+| C     | 20    | 0.15   |
+
+
+
+
+
+
+
+
