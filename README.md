@@ -1,7 +1,9 @@
 This repository contains the files used for Data Science for Life Scientists.
 
-[Activity 03](/myrmarkdown/act03.html)
+# Table of Contents
 
-[Activity 04](/myrmarkdown/act04.html)
+[Activity 03](https://crimeraaa.github.io/LIFEDAT/myrmarkdown/act03.html)
 
-[Activity 07](/myrmarkdown/Poblete_K-means.html)
+[Activity 04](https://crimeraaa.github.io/LIFEDAT/myrmarkdown/act04.html)
+
+[Activity 07](https://crimeraaa.github.io/LIFEDAT/myrmarkdown/Poblete_K-means.html)
