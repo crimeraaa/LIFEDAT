@@ -6,13 +6,13 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo=TRUE)
 ```
 
 # A. K-means (single K)
 ## 1. Read in the morphology data as a dataframe.
 ```{r}
-df <- read.csv("morphology_data.csv")
+df <- read.csv("../morphology_data.csv")
 ```
 
 ## 2. Remove the sex column.
