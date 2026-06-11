@@ -1,0 +1,135 @@
+---
+title: 'Activity 08: Hierarchical Clustering'
+author: "Jerome Poblete"
+date: "2026-06-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(rmarkdown)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# A. Hierarchical clustering
+## 1. In RStudio, create an R Markdown file. Name it “Your Surname_hclust.rmd.”
+See this file!
+
+## 2. Read in the morphology data as a dataframe.
+```{r data-read}
+md.raw <- read.csv("../morphology_data.csv")
+```
+
+## 3. Remove unnecessary columns (e.g., sex, pop).
+```{r data-clean}
+library(tidyverse)
+md.numeric <- select(md.raw, !c("Pop", "Sex"))
+
+# Species data measurements are located at these columns.
+md.numeric <- md.numeric[, 1:12]
+```
+
+## 4. Ensure that the dataframe has no NAs.
+```{r data-clean2}
+md.numeric <- md.numeric[complete.cases(md.numeric), ]
+```
+
+## 5. Before performing hierarchical clustering, calculate the “Euclidean distance” and use it as your input.
+```{r data-euclidean}
+md.scaled <- scale(md.numeric)
+md.dists  <- dist(md.scaled)
+md.names  <- rownames(md.scaled)
+```
+
+## 6. Perform hierarchical clustering using Ward’s and Single Linkage methods.
+### i. Single Linkage method
+```{r data-hierarchical-single}
+hc_single <- hclust(md.dists, method="single")
+plot(hc_single,
+     main="Single Linkage",
+     labels=md.names, cex=0.5)
+```
+
+### ii. Ward's Method
+```{r data-hierarchical-ward}
+hc_ward <- hclust(md.dists, method="ward.D2")
+plot(hc_ward,
+     main="Ward D2",
+     labels=md.names, cex=0.5)
+```
+
+## 7. Create a for loop function to explore Ks from 2 to 10 for each method using the Silhouette score and display the results with a plot.
+```{r data-silhoutte}
+explore <- function(data, pretty_name) {
+  avg_sil_widths <- vector(mode="numeric", length=9)
+  for (i in seq_along(avg_sil_widths)) {
+    # Returns a k x 3 matrix with attributes.
+    k   <- i + 1
+    sil <- silhouette(cutree(data, k), md.dists)
+    avg_sil_width <- mean(sil[, 3])
+    print(avg_sil_width)
+    avg_sil_widths[i] <- avg_sil_width
+  }
+  plot(2:10, avg_sil_widths, type="b", # Render both points and lines.
+       main=paste("Silhouette method (", pretty_name, ")", sep=""),
+       xlab="Cluster count (k)", ylab="Average Silhouette width",
+       cex=0.5)
+}
+
+explore(hc_single, "Single Linkage")
+explore(hc_ward, "Ward's Method")
+```
+
+## 8. Now, generate a dendrogram for each method, highlighting the optimal K with colored boxes.
+```{r data-diana, eval=FALSE, include=FALSE}
+# install.packages("cluster)
+library(cluster)
+diana_fit <- diana(md.scaled)
+plot(diana_fit, main="DIANA")
+```
+
+### i. Single Linkage
+```{r data-dendo-single}
+plot(hc_single,
+     main="Single Linkage",
+     labels=md.names, cex=0.5)
+
+# CMYK :)
+rect.hclust(hc_single, k=4, border=c("cyan", "magenta", "yellow", "black"))
+```
+
+### ii. Ward's Method
+```{r data-dendo-wards}
+plot(hc_ward,
+     main="Ward D2",
+     labels=md.names, cex=0.5)
+
+# CMYK plus one other thing
+rect.hclust(hc_ward, k=5, border=c("cyan", "magenta", "yellow", "black", "green"))
+```
+
+# B. K-means vs. Hierarchical
+## 1. Revisit your K-means outputs from the previous activity and compare how the clusters were determined.
+
+In Activity 07 I determined that the optimal number of clusters was 3 using the
+Elbow method. However in this activity I found that they were actually 4 and 5
+for the Single Linkage and Ward's Methods, respectively,
+
+## 2. Are the clusters consistent?
+If not, what do you think causes this, and how might it influence your
+interpretation of biological patterns in the data?
+
+The clusters are not consistent. I think that this has to do with the algorithms
+we used. In Activity 07 we basically brute forced it and only checked up to k=10.
+For this activity we instead used functions that are (probably) more robust and
+statistically sound. The `hclust()` function must have been really well tested.
+
+When it comes to interpreting biological patterns, even a difference of 1 in the
+number of clusters (k) like 3 vs. 4 is significant. Clusters that are grouped
+together when k=3 could be separate when k=4, for example. So things that you
+consider "related" in K-means could be considered not related in Hierachical
+Clustering. Another useful thing that HC provides is the ordering which you
+could use to determine the hierarchy, hence its name. It reminds me of a
+phlogenetic tree (like from Systematics) which is really useful to determine
+how related any one point is from the others.
+
