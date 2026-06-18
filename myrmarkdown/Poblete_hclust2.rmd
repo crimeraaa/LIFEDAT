@@ -1,0 +1,144 @@
+---
+title:  "Activity 09: Dimension Reduction: Principal Components Analysis (PCA)"
+author: "Jerome Poblete"
+date:   "2026 June 18"
+output: html_document
+---
+# A. Principal Components
+
+## 2. Read in the frogs' data as a dataframe
+
+```{r read-in}
+frog.data <- read.csv("../data/Meneses_et.al_2026_Platymantis.csv")
+```
+
+## 3. Subset your data to retain only the "Species" column and morphological features
+E.g. SVL, HL, SNL, etc., from columns 10 through the last one (i.e. 10:X).
+
+```{r subset-data}
+frog.numeric <- frog.data[, 10:ncol(frog.data)]
+```
+
+## 4. Check the class & structure of the subset data. How many morphological features are present in the dataset?
+
+```{r check-class}
+library(tidyverse)
+
+class(frog.numeric)
+structure(frog.numeric)
+frog.morph <- frog.numeric |> select(10:ncol(frog.numeric))
+length(frog.morph)
+```
+
+There are 16 morphological feature present in the data set.
+
+## 5. Ensure the data frame has no NAs.
+
+```{r ensure-data}
+frog.numeric <- frog.numeric[frog.numeric |> complete.cases(), ]
+frog.morph   <- frog.morph[frog.morph |> complete.cases(), ]
+```
+
+## 6. Scale the data using only the numeric columns, then compute the pairwise correlations. Do not further subset the data.
+
+```{r scale-data}
+frog.scaled <- frog.morph  |> scale()
+frog.cmat   <- frog.scaled |> cor() |> round(2)
+```
+
+## 7. Use the correlation matrix to...
+
+### i. Calculate the following:
+
+1. Eigenvectors
+
+```{r}
+frog.eig <- frog.cmat |> eigen()
+frog.eig
+```
+
+2. Proportion of variance (percentage)
+
+```{r}
+pvar <- function(x) {
+  props <- x / sum(x)
+  data.frame(Proportion = props, Percentage = props * 100)
+}
+
+frog.pvar <- pvar(frog.eig$values)
+frog.pvar |> round(4)
+```
+
+### ii. How many principal components were produced?
+
+```{r}
+frog.scores      <- frog.scaled %*% frog.eig$vectors
+frog.scores.head <- frog.scores |> head()
+frog.scores.head |> round(4)
+frog.scores.head |> nrow()
+```
+
+6 principals components were produced.
+
+### iii. What is the proportion of variance explained by components 1-4?
+
+```{r}
+frog.pvar$Percentage[1:4] |> round(2)
+```
+
+Components 1 through 4 explain 33.91%, 16.09%, 11.18%, and 9.34% of the
+variance, respectively.
+
+## 8. Create a 1x2 plot showing screeplot & the PCA biplot
+You can use either base R or ggplot2.
+You can be creative here by coloring the point shapes per species and adding a legend
+Consider the high data-ink ratio you learned from the lecture
+
+### i. Scree Plot
+
+```{r}
+library(ggplot2)
+
+# NOTE: Using the raw proportions vs. percentages will greatly influence
+#       what a good bin width would be!
+pcs <- paste0("PC", 1:ncol(frog.morph))
+
+ggplot(frog.pvar, aes(Proportion)) +
+  geom_histogram(binwidth = 0.05, fill = "blue")
+  
+barplot(frog.pvar$Proportion,
+        names.arg = pcs,
+        ylim = c(0, 1),
+        col  = "steelblue",
+        main = "Explained Variance (Scree Plot)",
+        ylab = "Proportion of Variance")
+```
+
+### ii. PCA biplot
+
+```{r}
+# What the hell are we gonna use as our alternative for iris$Species
+# It must be as long as scores[, 1]
+plot(frog.scores[, 1], frog.scores[, 2],
+     xlab = "PC1", ylab = "PC2",
+     main = "PCA Score Plot (PC1 vs. PC2)",
+     pch  = 19,
+     col  = factor(frog.data$Species))
+
+legend("topright",
+       legend = levels(factor(frog.data$Species)),
+       col = 1:3,
+       pch = 19)
+```
+
+# B. Broken-stick vs. PCAtest
+
+## 1. Determine the variance explained by principal components
+
+### i. Broken-stick method
+
+### ii. PCAtest package
+
+## 2. Create a barplot showing the results of Broken-stick analysis
+Also perform a significance test for principal components using PCAtest,
+following the instructions at https://arleyc.github.io/PCAtest/.
