@@ -21,7 +21,7 @@ operations.
 
 ```{r df-init}
 # NOTE: Ensure the CSV file is in the parent directory of this HTML!
-df <- read.csv("../herpetozoa-033-095-s001.csv")
+df <- read.csv("../data/herpetozoa-033-095-s001.csv")
 df <- df[complete.cases(df), ]
 ```
 

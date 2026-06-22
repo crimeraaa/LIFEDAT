@@ -17,7 +17,7 @@ See this file!
 
 ## 2. Read in the morphology data as a dataframe.
 ```{r data-read}
-md.raw <- read.csv("../morphology_data.csv")
+md.raw <- read.csv("../data/morphology_data.csv")
 ```
 
 ## 3. Remove unnecessary columns (e.g., sex, pop).

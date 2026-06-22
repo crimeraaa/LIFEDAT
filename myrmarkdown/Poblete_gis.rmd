@@ -1,0 +1,56 @@
+---
+title: 'Activity 10: Geographic Information System'
+author: "Jerome Poblete"
+date: "2026-06-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# A. Retrieving spatial data
+## 1. In RStudio, create an R Markdown file. Name it “Your Surname_gis.rmd.”
+
+You're looking at it right now!
+
+## 2. Go to the Global Biodiversity Information Facility (GBIF) website.
+Create your account and download your assigned species records below as a CSV file (see Table).
+
+## 3. Clean the data by removing records found outside the reported species range.
+
+```{r clean-data}
+library(tidyverse)
+
+# TODO: Do we want to include collection infromation? e.g. date, collectors?
+gbif <- read.delim("../data/Barbourula_busuangensis_GBIF.csv")
+gbif.coords <- gbif |> dplyr::select(decimalLatitude:decimalLongitude)
+gbif.coords <- gbif.coords[gbif.coords |> complete.cases(), ]
+```
+
+## 4. Go to the DIVA-GIS website and download the Philippine administrative boundaries/areas.
+The zip file contains multiple shapefiles (adm0–3), representing different boundary levels (0-country; 1-provincial; 2-municipal; 3-barangay).
+
+```{r diva-gis-download}
+library(sf) # For reading shapefiles.
+phl_adm <- sf::st_read("../data/PHL_adm/PHL_adm1.shp")
+```
+
+## 5. Get only the provincial level, and subset the provinces that contain only distribution records for your assigned species.
+
+```{r diva-gis-subset}
+gbif.provinces <- gbif |> dplyr::select(stateProvince) |> unique()
+phl_adm.palawan <- phl_adm[59, ] # Palawan is row 59.
+```
+
+## 6. Go back to the DIVA-GIS website.
+Download the Philippine digital elevation model (“Elevation [country mask]”), then clip it using the provinces you selected in step 5.
+
+```{r diva-gis-elevation}
+```
+
+## 7. If DIVA-GIS is acting weirdly, you can download the admin boundaries here and elevation here.
+
+# B. Create your first map
+## 1. Now, put all the data together into a map, following the pre-lab lecture.
+Make sure that data layers (points, polygons, DEMs) are arranged properly. Be creative!
+

@@ -4,10 +4,25 @@ author: "Jerome Poblete"
 date:   "2026 June 18"
 output: html_document
 ---
+
+Setup for later!
+```{r setup-colors, echo=FALSE}
+# https://github.com/joshdick/onedark.vim/blob/main/colors/onedark.vim
+atom.onedark <- data.frame(
+  black    = "#282C34",
+  lightred = "#E06C75",
+  green    = "#98C379",
+  yellow   = "#E5C07B",
+  blue     = "#61AFEF",
+  magenta  = "#C678DD",
+  cyan     = "#56B6C2",
+  white    = "#ABB2BF",
+  darkred  = "#BE5046"
+)
+```
+
 # A. Principal Components
-
 ## 2. Read in the frogs' data as a dataframe
-
 ```{r read-in}
 frog.data <- read.csv("../data/Meneses_et.al_2026_Platymantis.csv")
 ```
@@ -20,46 +35,39 @@ frog.numeric <- frog.data[, 10:ncol(frog.data)]
 ```
 
 ## 4. Check the class & structure of the subset data. How many morphological features are present in the dataset?
-
 ```{r check-class}
 library(tidyverse)
 
 class(frog.numeric)
 structure(frog.numeric)
-frog.morph <- frog.numeric |> select(10:ncol(frog.numeric))
+frog.morph <- frog.numeric |> dplyr::select(10:ncol(frog.numeric))
 length(frog.morph)
 ```
 
 There are 16 morphological feature present in the data set.
 
 ## 5. Ensure the data frame has no NAs.
-
 ```{r ensure-data}
 frog.numeric <- frog.numeric[frog.numeric |> complete.cases(), ]
 frog.morph   <- frog.morph[frog.morph |> complete.cases(), ]
 ```
 
 ## 6. Scale the data using only the numeric columns, then compute the pairwise correlations. Do not further subset the data.
-
 ```{r scale-data}
 frog.scaled <- frog.morph  |> scale()
-frog.cmat   <- frog.scaled |> cor() |> round(2)
+frog.cmat   <- frog.scaled |> stats::cor() |> round(2)
 ```
 
 ## 7. Use the correlation matrix to...
-
 ### i. Calculate the following:
-
-1. Eigenvectors
-
-```{r}
+#### a. Eigenvectors
+```{r eigenvectors}
 frog.eig <- frog.cmat |> eigen()
 frog.eig
 ```
 
-2. Proportion of variance (percentage)
-
-```{r}
+#### b. Proportion of variance (percentage)
+```{r proportion-of-variance}
 pvar <- function(x) {
   props <- x / sum(x)
   data.frame(Proportion = props, Percentage = props * 100)
@@ -70,9 +78,14 @@ frog.pvar |> round(4)
 ```
 
 ### ii. How many principal components were produced?
+```{r count-principal-components}
+## PC1, PC2, ... PCi
+pc_strings <- paste0("PC", 1:length(frog.pvar$Proportion))
 
-```{r}
-frog.scores      <- frog.scaled %*% frog.eig$vectors
+## %*% is the matrix multiplication operator.
+frog.scores <- data.frame(frog.scaled %*% frog.eig$vectors)
+colnames(frog.scores) <- pc_strings
+
 frog.scores.head <- frog.scores |> head()
 frog.scores.head |> round(4)
 frog.scores.head |> nrow()
@@ -81,7 +94,6 @@ frog.scores.head |> nrow()
 6 principals components were produced.
 
 ### iii. What is the proportion of variance explained by components 1-4?
-
 ```{r}
 frog.pvar$Percentage[1:4] |> round(2)
 ```
@@ -91,54 +103,208 @@ variance, respectively.
 
 ## 8. Create a 1x2 plot showing screeplot & the PCA biplot
 You can use either base R or ggplot2.
-You can be creative here by coloring the point shapes per species and adding a legend
-Consider the high data-ink ratio you learned from the lecture
+You can be creative here by coloring the point shapes per species and adding a
+legend.
+Consider the high data-ink ratio you learned from the lecture.
 
 ### i. Scree Plot
+#### a. Base R
+```{r scree-plot-base, echo=FALSE}
+graphics::barplot(frog.pvar$Proportion,
+  main      = "Frog Morphology: Explained Variance (Scree Plot)",
+  xlab      = "Principal Component", ylab = "Proportion of Variance",
+  sub       = "Base R version",
+  names.arg = pc_strings,  # x-axis labels should be of the correct count.
+  ylim      = c(0.0, 1.0), # y-axis values are in the range [0.0, 1.0].
+  border    = NA,
+  col       = atom.onedark$cyan)
+```
 
-```{r}
+#### b. ggplot2
+```{r scree-plot-ggplot2, echo=FALSE}
 library(ggplot2)
 
-# NOTE: Using the raw proportions vs. percentages will greatly influence
-#       what a good bin width would be!
-pcs <- paste0("PC", 1:ncol(frog.morph))
-
-ggplot(frog.pvar, aes(Proportion)) +
-  geom_histogram(binwidth = 0.05, fill = "blue")
-  
-barplot(frog.pvar$Proportion,
-        names.arg = pcs,
-        ylim = c(0, 1),
-        col  = "steelblue",
-        main = "Explained Variance (Scree Plot)",
-        ylab = "Proportion of Variance")
+# `factor()` with the 2nd argument `levels` is needed to ensure the
+# original ordering we passed in. Otherwise ggplot will arrange it by
+# ASCII value.
+ggplot2::ggplot(frog.pvar,aes(pc_strings |> factor(pc_strings), Proportion)) +
+  # Flipped version of `ggplot2::geom_bar()`.
+  ggplot2::geom_col(fill = atom.onedark$magenta) +
+  # Add these so the plot is a little more independent.
+  ggplot2::labs(x="Principal Component", y="Proportion of Variance",
+    title    = "Frog Morphology: Explained Variance (Scree Plot)",
+    subtitle = "ggplot2 Version") +
+  # Clamp %variance.
+  ggplot2::lims(y = c(0.0, 1.0))
 ```
 
 ### ii. PCA biplot
+#### a. Base R
+```{r pca-biplot-base, echo=FALSE}
+# Map indexes to species as a `factor`, as character vectors are not useful
+# for plotting purposes. This helps us determine which score is of what species.
+frog.species  <- frog.data$Species |> factor()
 
-```{r}
-# What the hell are we gonna use as our alternative for iris$Species
-# It must be as long as scores[, 1]
-plot(frog.scores[, 1], frog.scores[, 2],
-     xlab = "PC1", ylab = "PC2",
-     main = "PCA Score Plot (PC1 vs. PC2)",
-     pch  = 19,
-     col  = factor(frog.data$Species))
+mycolors <- c(atom.onedark$lightred, atom.onedark$blue)
 
-legend("topright",
-       legend = levels(factor(frog.data$Species)),
-       col = 1:3,
-       pch = 19)
+# Must be set BEFORE the plot is drawn!
+# We need this because `plot(bg=)` is NOT the same as this.
+# par(fg       = atom.onedark$white,
+#     col.axis = atom.onedark$white,
+#     col.lab  = atom.onedark$white,
+#     col.main = atom.onedark$white,
+#     col.sub  = atom.onedark$white,
+#     bg       = atom.onedark$black)
+
+graphics::plot(frog.scores[,1], frog.scores[,2],
+  main = "Frog Morphology: PCA Score Plot (PC1 vs. PC2)",
+  xlab = "PC1", ylab = "PC2",
+  pch  = 19,
+  # We need a vector of colors, not an array of factors.
+  # NOTE The `labels` argument of `factor` describes *what* to use based
+  #      on treating each index as a level.
+  col  = frog.data$Species |> factor(labels=mycolors) |> as.character())
+
+graphics::legend("bottomleft",
+  title  = "Species",
+  legend = frog.species |> levels(),
+  col    = mycolors, # Color of points/lines in the legend.
+  pch    = 19)
+
+# Add eigenvector arrows.
+load_scale <- 7.5 # Adjust for visibility
+loadings_scaled <- frog.eig$vectors[, 1:2] * load_scale
+graphics::arrows(0, 0,
+  loadings_scaled[, 1], loadings_scaled[, 2],
+  length = 0.10, # Arrow head size.
+  col =  atom.onedark$black,
+  lty = "solid", # Line type. See ?par.
+  lwd = 1.25)       # Line width. Must be >= 1.
+
+## Add labels for the variables.
+graphics::text(loadings_scaled[, 1], loadings_scaled[, 2],
+  labels = colnames(frog.morph),
+  col    = atom.onedark$black,
+  pos    = 3, # 1 = below, 2= left, 3 = above, 4 = right
+  cex    = 0.75) # Numeric character expansion factor.
+```
+
+#### b. ggplot2
+```{r pca-biplot-gglot2, echo = FALSE}
+ggplot2::ggplot(frog.scores, aes(PC1, PC2, colour=frog.species)) +
+  ggplot2::geom_point() +
+  # This is how we can customize the colors of the grouping variable.
+  # Each color maps to a particular level. This is NOT a map from individual
+  # data points to colors.
+  ggplot2::scale_colour_manual(values = mycolors) +
+  ggplot2::labs(title= "Frog Morphology: PCA Score Plot (PC1 vs. PC2)",
+       subtitle = "ggplot2 Version",
+       # Affects the legend title, confusingly enough!
+       # See: https://r-charts.com/ggplot2/legend/
+       colour   = "Species") +
+  ggplot2::theme(legend.position = "right")
 ```
 
 # B. Broken-stick vs. PCAtest
-
 ## 1. Determine the variance explained by principal components
-
 ### i. Broken-stick method
+```{r broken-stick}
+## p = #variables
+## k = component index
+broken_stick <- function(p) {
+  sapply(1:p, function(k) {sum(1 / (k:p)) / p})
+}
+
+frog.bs <- broken_stick(ncol(frog.morph))
+frog.bs |> round(4)
+
+## Combine observed and broken stick variance.
+frog.cmp <- data.frame(
+  Observed     = frog.pvar$Proportion,
+  Broken_Stick = frog.bs,
+  row.names    = pc_strings
+)
+frog.cmp |> round(4)
+```
+
+#### a. Base R plot
+```{r broken-stick-base, echo = FALSE}
+graphics::plot(frog.pvar$Proportion,
+  main  = "Frog Morphology: PCA (Broken-Stick Analysis)",
+  xlab  = "Principal Component", ylab = "Proportion of Variance",
+  type  = "b",
+  pch   = 19,
+  col   = atom.onedark$cyan,
+  ylim  = c(0, max(frog.pvar$Proportion)))
+
+graphics::lines(frog.bs,
+  type = "b",
+  pch  = 17,
+  col  = atom.onedark$lightred)
+
+graphics::legend("topright",
+  legend = c("Observed", "Broken Stick"),
+  pch    = c(19, 17),
+  col    = c(atom.onedark$cyan, atom.onedark$lightred))
+```
 
 ### ii. PCAtest package
+
+```{r pca-test}
+# install.packages("devtools")
+# devtools::install_github("arleyc/PCAtest")
+library(PCAtest)
+
+frog.pca <- frog.morph |> PCAtest::PCAtest(100, 100, 0.05, counter=FALSE, plot=TRUE)
+```
+
+### iii. Q: What is the difference between these 2 methods for assessing the importance of principal components?
+
+The variances explained by the 1st 4 principal components of the Broken-Stick
+method are 21.13%, 14.88%, 11.75%, and 9.67%. Most of these are lower than
+their respective PCs in the Observed data, except for PC3. The Broken-Stick
+method we used also notably uses only the number of principal components
+to calculate the PCs. Everything is effectively just in relation to the
+numeroc of PCs we started with.
+
+The PCAtest library, according to its help (see `?PCAtest`), uses random
+permutations of the input data. It also helps us determines exactly which
+PCs are indeed significant. This probably means it is more reliable, although
+more computationally intensive.
+
 
 ## 2. Create a barplot showing the results of Broken-stick analysis
 Also perform a significance test for principal components using PCAtest,
 following the instructions at https://arleyc.github.io/PCAtest/.
+
+From the previous item we know that only the 1st 4 PCs are significant.
+
+### i. Base R
+
+```{r broken-stick-graphics-barplot, echo=FALSE}
+
+# Treat significant PCs as green and the rest as red.
+frog.bs_colors <- rep(atom.onedark$lightred, length(frog.bs))
+frog.bs_colors[1:4] <- atom.onedark$green
+
+graphics::barplot(frog.bs,
+  main      = "Frog Morphology: PCA (Broken-Stick)",
+  sub       = "Base R version",
+  xlab      = "Principal Component", ylab = "Proportion of Variance",
+  names.arg = pc_strings,
+  col       = frog.bs_colors,
+  border    = NA,
+  ylim      = c(0.0, 1.0))
+```
+
+
+### ggplot2
+
+```{r broken-stick-ggplot-barplot, echo=FALSE}
+ggplot2::ggplot(frog.cmp, aes(pc_strings |> factor(pc_strings), Broken_Stick)) +
+  ggplot2::geom_col(fill = frog.bs_colors) +
+  ggplot2::labs(x="Principal Component", y="Proportion of Variance",
+    title    = "Frog Morphology: PCA (Broken-Stick)",
+    subtitle = "ggplot2 Version") +
+  ggplot2::lims(y = c(0.0, 1.0))
+```

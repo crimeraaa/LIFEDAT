@@ -5,3 +5,6 @@
 *.png
 *.jpg
 *.jpeg
+
+# Heavy binary blobs
+data/**

@@ -26,7 +26,7 @@ Load the habitat types data set using the base R `read.csv()` function.
 
 ```{r ht-read}
 # NOTE: Ensure this file is found in the parent directory of this HTML.
-ht <- read.csv("../habitat_types.csv")
+ht <- read.csv("../data/habitat_types.csv")
 ```
 
 ## 3. Show the data using the tidyverse equivalent of base R `str`

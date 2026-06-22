@@ -10,3 +10,7 @@ This repository contains the files used for Data Science for Life Scientists.
 
 [Activity 08](https://crimeraaa.github.io/LIFEDAT/myrmarkdown/Poblete_hclust.html)
 
+[Activity 09](https://crimeraaa.github.io/LIFEDAT/myrmarkdown/Poblete_hclust2.html)
+
+[(WIP) Activity 10](https://crimeraaa.github.io/LIFEDAT/myrmarkdown/Poblete_gis.html)
+
