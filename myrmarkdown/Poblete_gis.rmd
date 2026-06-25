@@ -126,5 +126,8 @@ ggplot2::ggplot(terra::as.data.frame(dem, xy = TRUE)) +
   ggplot2::coord_equal() +
   ggplot2::labs(title="Palawan Province", x="Longitude", y="Latitude") +
   ggplot2::theme_bw()
+
+## Save the previous ggplot plot to a PDF file.
+ggplot2::ggsave("Barbourule_busuangensis.pdf", width=1920, height=1080, units="px")
 ```
 
