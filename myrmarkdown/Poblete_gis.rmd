@@ -16,41 +16,115 @@ You're looking at it right now!
 ## 2. Go to the Global Biodiversity Information Facility (GBIF) website.
 Create your account and download your assigned species records below as a CSV file (see Table).
 
+The taxon information for *Barbourula busuangensis* can be found 
+[here](https://www.gbif.org/taxon/KMPP).
+
 ## 3. Clean the data by removing records found outside the reported species range.
 
 ```{r clean-data}
-library(tidyverse)
+library(tidyverse) # install.packges("tidyverse")
 
-# TODO: Do we want to include collection infromation? e.g. date, collectors?
-gbif <- read.delim("../data/Barbourula_busuangensis_GBIF.csv")
-gbif.coords <- gbif |> dplyr::select(decimalLatitude:decimalLongitude)
-gbif.coords <- gbif.coords[gbif.coords |> complete.cases(), ]
+# This is the same as `cleaned` in `act10_gis.R`.
+gbif.raw <- utils::read.delim("../data/Barbourula_busuangensis_GBIF.csv")
+gbif <- gbif.raw |>
+  ## TODO: Almost all the entries are what we need, but some are missing
+  ##       named location data. Do we want to filter them out?
+  # dplyr::filter(!(stateProvince %in% c("", "#nd"))) |>
+  dplyr::select(decimalLatitude:decimalLongitude)
+
+# Remove rows containing NA's.
+gbif <- gbif[gbif |> complete.cases(), ]
 ```
 
 ## 4. Go to the DIVA-GIS website and download the Philippine administrative boundaries/areas.
 The zip file contains multiple shapefiles (adm0–3), representing different boundary levels (0-country; 1-provincial; 2-municipal; 3-barangay).
 
-```{r diva-gis-download}
-library(sf) # For reading shapefiles.
-phl_adm <- sf::st_read("../data/PHL_adm/PHL_adm1.shp")
-```
-
-## 5. Get only the provincial level, and subset the provinces that contain only distribution records for your assigned species.
+## 5. Get only the provincial level.
+Subset the provinces that contain only distribution records for your assigned
+species.
 
 ```{r diva-gis-subset}
-gbif.provinces <- gbif |> dplyr::select(stateProvince) |> unique()
-phl_adm.palawan <- phl_adm[59, ] # Palawan is row 59.
+# install.packages(c("sf", "terra"))
+library(sf)
+library(terra)
+
+pal <- sf::st_read("../data/PHL_adm/PHL_adm1.shp") |>
+  dplyr::filter(NAME_1 == "Palawan") |>
+  dplyr::select(geometry)
+
+# x=Longitude, y=Latitude
+bounds <- pal |> terra::ext()
+
+# Remove the one outlier from Luzon.
+gbif <- gbif |> dplyr::filter(
+  dplyr::between(decimalLongitude, bounds$xmin, bounds$xmax),
+  dplyr::between(decimalLatitude,  bounds$ymin, bounds$ymax))
 ```
 
 ## 6. Go back to the DIVA-GIS website.
-Download the Philippine digital elevation model (“Elevation [country mask]”), then clip it using the provinces you selected in step 5.
+Download the Philippine digital elevation model (“Elevation [country mask]”),
+then clip it using the provinces you selected in step 5.
 
 ```{r diva-gis-elevation}
+phil_dem <- terra::rast("../data/ph_ strm_geo.tif")
+
+## Transform if needed.
+pal <- pal |> sf::st_transform(phil_dem |> st_crs())
+
+## Clip raster.
+dem <- phil_dem |> crop(pal) |> mask(pal)
 ```
 
-## 7. If DIVA-GIS is acting weirdly, you can download the admin boundaries here and elevation here.
+```{r, echo=FALSE, eval=FALSE}
+## NOTE: Use pre-transformed versions!
+print(sf::st_crs(pal) != sf::st_crs(phil_dem))
+
+## Check data info.
+dem |> terra::crs()  ## Coordinate Reference System (CRS).
+dem |> terra::ext()  ## Spatial extent.
+dem |> terra::nlyr() ## Number of layers (bands).
+```
+
+## 7. (Optional) Is the DIVA-GIS is acting weirdly?
+If so, you can download the admin boundaries [here](https://dlsu.instructure.com/courses/249254/files/32290423?wrap=1)
+and elevation
+[here](https://dlsu.instructure.com/courses/249254/files/32290449?wrap=1).
 
 # B. Create your first map
 ## 1. Now, put all the data together into a map, following the pre-lab lecture.
-Make sure that data layers (points, polygons, DEMs) are arranged properly. Be creative!
+Make sure that data layers (points, polygons, DEMs) are arranged properly.
+Be creative!)
+
+```{r first-map-wahoo}
+# install.packages(c("ggplot2", "ggnewscale"))
+library(ggplot2)
+library(ggnewscale)
+
+## Convert demarcation(?) data for ggplot.
+names(dem) <- "elevation"
+
+## Visualize the lowest to highest points.
+gradient <- c("#2B89BA", "#ABDDA4", "#FFFFBF", "#FDAE61", "#D7191C")
+
+## Plot DEM.
+ggplot2::ggplot(terra::as.data.frame(dem, xy = TRUE)) +
+  ggplot2::geom_tile(aes(x, y, fill=elevation)) +
+
+  ## Change color manually.
+  ggplot2::scale_fill_gradientn(colors=gradient, name="Elevation (m)") +
+  
+  ## Plot sampling points as well.
+  ggnewscale::new_scale_fill() +
+  ggplot2::geom_point(data=gbif, # Override the implicit argument!
+    mapping = aes(decimalLongitude, decimalLatitude),
+    shape   = 21,
+    color   = "black",
+    size    = 1.0,
+    stroke  = 1.0) +
+  
+  ## Finalization.
+  ggplot2::coord_equal() +
+  ggplot2::labs(title="Palawan Province", x="Longitude", y="Latitude") +
+  ggplot2::theme_bw()
+```
 
