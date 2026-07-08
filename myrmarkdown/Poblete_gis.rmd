@@ -66,7 +66,7 @@ Download the Philippine digital elevation model (“Elevation [country mask]”)
 then clip it using the provinces you selected in step 5.
 
 ```{r diva-gis-elevation}
-phil_dem <- terra::rast("../data/ph_ strm_geo.tif")
+phil_dem <- terra::rast("../data/ph_strm_geo.tif")
 
 ## Transform if needed.
 pal <- pal |> sf::st_transform(phil_dem |> st_crs())
@@ -95,7 +95,7 @@ and elevation
 Make sure that data layers (points, polygons, DEMs) are arranged properly.
 Be creative!)
 
-```{r first-map-wahoo}
+```{r first-map-wahoo, fig.width=8, fig.height=6}
 # install.packages(c("ggplot2", "ggnewscale"))
 library(ggplot2)
 library(ggnewscale)
@@ -128,6 +128,6 @@ ggplot2::ggplot(terra::as.data.frame(dem, xy = TRUE)) +
   ggplot2::theme_bw()
 
 ## Save the previous ggplot plot to a PDF file.
-ggplot2::ggsave("Barbourule_busuangensis.pdf", width=1920, height=1080, units="px")
+ggplot2::ggsave("Barbourule_busuangensis.pdf")
 ```
 

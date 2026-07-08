@@ -1,0 +1,216 @@
+---
+title: 'Activity 11: Linear Regression'
+author: "Jerome Poblete"
+date: "2026-07-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo=TRUE)
+```
+
+## A. Simple linear regression
+### 1. In RStudio, create an R Markdown file. Name it “Your Surname_linear_reg.rmd.”
+
+You're looking at it right now!
+
+### 2. Read in the species data.
+Make sure to remove unnecessary rows with NAs.
+```{r read-and-clean-data}
+library(tidyverse) # install.packages("tidyverse")
+
+df_herp <- utils::read.csv("../data/herpetozoa-033-095-s001.csv")
+df_herp <- df_herp[df_herp |> complete.cases(), ]
+```
+
+### 3. Read in the elevation data.
+The file is given by `ph_strm_geo.tif`.
+```{r read-elev-data}
+library(terra) ## install.packages("terra")
+
+sr_dem <- terra::rast("../data/ph_strm_geo.tif")
+```
+
+### 4. From the species data, subset the longitude and latitude coordinates.
+Then convert the coordinates to a spatial vector (`SpatVector`).
+Use the “vect” function from the “terra” package.
+```{r subset-long-lat}
+sv_coords <- terra::vect(df_herp, geom=c("Long", "Lat"))
+```
+
+### 5. Using the converted coordinates, extract elevation data for each point.
+Use the “extract” function in the “terra” package. The extracted data will have two columns:
+“ID” and “Band_1.” The “Band_1” column contains the elevation.
+```{r extract-elev-data}
+sv_dem_elev <- terra::extract(sr_dem, sv_coords)
+```
+
+### 6. Subset the species data to retain only the species richness column (SPPTotal).
+Then combine this column with the extracted elevation. Rename “Band_1” to “elevation.”
+
+```{r subset-species-data}
+## Don't use `c` as that will just return a heterogenous vector, i.e. `vector(matrix, vector)
+x     <- sv_dem_elev$Band_1
+y     <- df_herp[, "SPPTotal"]
+df_xy <- data.frame(x, y)
+
+## Make plot axes names clearer.
+colnames(df_xy) <- c("Elevation", "Species total")
+```
+
+### 7. Now, perform simple linear regression using the code from the pre-lab lecture.
+Also include a plot.
+What can you infer about the relationship between species and elevation?
+```{r slr-calc-data}
+## Regression Equation
+##  y = a + b*x
+##
+## where
+##  x: independent variable
+##  y: dependent variable
+##  a: intercept
+##  b: slope
+##
+## Intercept
+##  a = ybar - b*xbar
+##
+## where
+##  xbar: mean(x)
+##  ybar:  mean(y)
+##
+## Slope
+##  b = sum(xdev * ydev) / sum(xdev^2)
+##
+## where
+##  xdev: absolute devor of x = (x - xbar)
+##  ydev: absolute devor of y = (y - ybar)
+
+xbar <- mean(x)
+xdev <- x - xbar
+
+ybar <- mean(y)
+ydev <- y - ybar
+```
+
+Our regression equation terms are given by the above equations.
+```{r slr-calc-terms}
+b <- sum(xdev * ydev) / sum(xdev^2)
+b
+
+a <- ybar - b*xbar
+a
+
+## Write out the equation.
+cat("Regression Equation: y =", round(a, 3), "+", round(b, 3), "x\n")
+
+## Calculate predicted species count.
+yhat <- a + b*x
+
+## Calculate R-squared.
+## Sum of Squared Errors (SSE)
+SSE <- sum((y - yhat)^2)
+
+## Total Sum of Squares (SST)
+SST <- sum(ydev^2)
+
+## Coefficient of Determination
+R2 <- 1 - (SSE / SST)
+R2
+```
+
+#### i. Base R Plot
+```{r slr-base-r-plot}
+atom_black   <- "#282C34"
+atom_blue    <- "#61AFEF"
+atom_red     <- "#E06C75"
+atom_green   <- "#98C379"
+atom_magenta <- "#C678DD"
+atom_cyan    <- "#56B6C2"
+atom_white   <- "#ABB2BF"
+
+## Plot the data proper.
+plot(x, y,
+  pch  = 19,
+  col  = atom_blue,
+  xlab = "Elevation", ylab = "Species total",
+  main = "Simple Linear Regression")
+
+## Plot the fitted line on top of the data.
+abline(a, b, col=atom_red, lwd=2)
+
+## Add predicted values.
+points(x, yhat,
+  pch = 17, # Triangle
+  col = atom_green,
+  cex = 1.2)
+
+## Draw the residual lines on top of the predicted values.
+segments(
+  x0  = x, y0 = y,
+  x1  = x, y1 = yhat,
+  lty = 2,
+  col = atom_white)
+
+## Add the (John) legend
+legend("topright",
+  legend = c("Observed", "Predicted", "Regression Line"),
+  pch    = c(19, 17, NA),
+  lty    = c(NA, NA, 1),
+  col    = c(atom_blue, atom_green, atom_red),
+  lwd    = c(NA, NA, 2),
+  bty    = "n")
+```
+
+#### iii. ggplot2
+```{r slr-ggplot2-plot}
+library(ggplot2) ## install.packages("ggplot2")
+
+ggplot2::ggplot(df_xy, aes(Elevation, `Species total`)) +
+  ggplot2::geom_point(colour=atom_blue) +
+  ggplot2::geom_smooth(method="lm", colour=atom_red, se=FALSE) +
+  ggplot2::geom_segment(x=x, y=y, xend=x, yend=yhat,
+    colour    = atom_white,
+    linetype  = 2,   ## Dashed. See ?linetype.
+    linewidth = 0.7) ## In increments of 0.75mm. See ?linewidth.
+```
+
+## B. Multiple linear regression
+### 1. Read in both annual precipitation and temperature data.
+Extract the data following the instructions from A4–5.
+```{r mlr-read-data}
+sr_prec      <- terra::rast("../data/annual_precipitation.tif")
+sv_prec_elev <- terra::extract(sr_prec, sv_coords)
+x1           <- sv_prec_elev$annual_precipitation
+
+sr_temp      <- terra::rast("../data/annual_temperature.tif")
+sv_temp_elev <- terra::extract(sr_temp, sv_coords)
+x2           <- sv_temp_elev$annual_temperature
+```
+
+### 2. Combine the extracted data with the species and elevation data into a single dataframe.
+```{r mlr-extract-data}
+df_x1x2y <- data.frame(x1, x2, y)
+colnames(df_x1x2y) <- c("Annual precipitation", "Annual temperature", "Species total")
+```
+
+### 3. Perform multiple linear regression using the “lm” function.
+```{r mlr-proper}
+## Fit the multiple linear regression model.
+model <- lm(y ~ x1 + x2)
+
+## Display the model summary.
+summary(model)
+
+## Display the Regression coefficients.
+coef(model)
+```
+
+### 4. Which relationship is statistically significant?
+Based on the results above, only x1 (Annual precipitation) is statistically significant as it 
+has a very low p-value of 0.001.
+This is lower than most alpha (0.1, 0.05, 0.01, 0.005), meaning it is highly significant.
+
+However, x2 (Annual temperature) is not statistically significant as it has a rather high p-value of 0.07.
+This is higher than most alpha (0.05, 0.01, 0.005) meaning it is not very significant.
+It would only be statistically significant for alpha=0.1.
