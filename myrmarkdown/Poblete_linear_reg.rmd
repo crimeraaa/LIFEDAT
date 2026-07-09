@@ -120,7 +120,7 @@ R2
 ```
 
 #### i. Base R Plot
-```{r slr-base-r-plot}
+```{r slr-base-r-plot, fig.cap="Simple linear regression using Base R."}
 atom_black   <- "#282C34"
 atom_blue    <- "#61AFEF"
 atom_red     <- "#E06C75"
@@ -163,7 +163,7 @@ legend("topright",
 ```
 
 #### iii. ggplot2
-```{r slr-ggplot2-plot}
+```{r slr-ggplot2-plot, fig.cap="Simple linear regression using ggplot2."}
 library(ggplot2) ## install.packages("ggplot2")
 
 ggplot2::ggplot(df_xy, aes(Elevation, `Species total`)) +
@@ -173,6 +173,8 @@ ggplot2::ggplot(df_xy, aes(Elevation, `Species total`)) +
     colour    = atom_white,
     linetype  = 2,   ## Dashed. See ?linetype.
     linewidth = 0.7) ## In increments of 0.75mm. See ?linewidth.
+
+ggplot2::ggsave("Herp_SLR_ggplot2.pdf")
 ```
 
 ## B. Multiple linear regression

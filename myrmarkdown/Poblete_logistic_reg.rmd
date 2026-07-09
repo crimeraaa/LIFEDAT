@@ -1,0 +1,140 @@
+---
+title: 'Activity 12: Logistic Regression'
+author: "Jerome Poblete"
+date: "2026-07-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# rm(list=ls())
+knitr::opts_chunk$set(echo=TRUE)
+```
+
+
+# Fitting multiple logistic regression
+Read in and clean the data.
+```{r mlr-read-data}
+## 2. Read in the species data and remove unnecessary rows with NAs.
+deer_df <- utils::read.csv("../data/ph_mouse_deer.csv")
+deer_df <- deer_df[complete.cases(deer_df), ]
+```
+
+Prepare the data needed to generate the map.
+```{r mlr-generate-map, eval=FALSE}
+## 3. Generate a map showing the species' observations localities using the 
+##    longitude and latitude coordinates. Check Activity 10 and use the 
+##    provided codes as your guide for creating the map. Export the map as a
+##    PDF file.
+library(sf)
+library(terra)
+library(dplyr)
+
+pal_sf <- sf::st_read("../data/PHL_adm/PHL_adm1.shp") |>
+  dplyr::filter(NAME_1 == "Palawan") |>
+  dplyr::select(geometry)
+
+## x=Longitude, y=Latitude
+x        <- deer_df$Longitude
+y        <- deer_df$Latitude
+deer_ext <- terra::ext(min(x), max(x), min(y), max(y))
+pal_ext  <- pal_sf |> terra::ext()
+rm(x, y)
+
+## Remove outliers.
+deer_df <- deer_df |> dplyr::filter(
+  dplyr::between(Longitude, pal_ext$xmin, pal_ext$xmax),
+  dplyr::between(Latitude,  pal_ext$ymin, pal_ext$ymax))
+
+## Clip Philippine digital elevation model using our selected Province (Palawan).
+ph_dem_sr <- terra::rast("../data/ph_strm_geo.tif")
+
+## Transform if needed.
+pal_sf <- pal_sf |> sf::st_transform(ph_dem_sr |> sf::st_crs())
+
+## Clip raster.
+pal_dem_sr <- ph_dem_sr |> terra::crop(pal_sf) |> terra::mask(pal_sf)
+
+## Convert demarcation(?) data for ggplot.
+names(pal_dem_sr) <- "Elevation"
+```
+
+Generate and draw the map.
+```{r plot-dem, eval=FALSE}
+library(ggplot2)
+library(ggnewscale)
+
+## Visualize the lowest to highest points.
+pal_grad_vec <- c("#2B89BA", "#ABDDA4", "#FFFFBF", "#FDAE61", "#D71910")
+
+## Plot DEM.
+ggplot2::ggplot(terra::as.data.frame(pal_dem_sr, xy=TRUE)) +
+  ggplot2::geom_tile(aes(x, y,fill=Elevation)) +
+  
+  ## Change color manually.
+  ggplot2::scale_fill_gradientn(colors=pal_grad_vec, name="Elevation (m)") +
+  
+  ## Plot sampling points as well.
+  ggnewscale::new_scale_fill() +
+  ggplot2::geom_point(data=deer_df, ## Override the chained implicit argument!
+    mapping = aes(Longitude, Latitude),
+    shape   = 21,
+    color   = "black",
+    size    = 1.0,
+    stroke  = 1.0) +
+
+  ## Finalization
+  ggplot2::coord_equal() +
+  ggplot2::labs(title="Palawan Province", x="Longitude", y="Latitude") +
+  ggplot2::theme_bw()
+
+## Save the most recent ggplot (the last one!) to a PDF file.
+ggplot2::ggsave("PH_Mouse_deer.pdf")
+```
+
+```{r mlr-perform}
+## 4. Using the `glm()` function, perform multiple logistic regression.
+##    Ensure that the habitat types (.e. HabitatCode) are treated as 
+##    categorical variables by converting them to factors.
+##
+#################################################################################
+## 4.1. Multiple Logistic Regression
+#################################################################################
+x1_fact  <- factor(deer_df$Habitat)
+x1       <- deer_df$HabitatCode
+x2       <- deer_df$AverageDistance
+y        <- deer_df$Detected
+deer_df2 <- data.frame(x1, x1_fact, x2, y)
+model    <- stats::glm(y ~ x1_fact + x2, family=binomial, data=deer_df2)
+
+## Calculate the predicted probabilites.
+x1_df      <- data.frame(x1=x1_fact, x2=mean(x2))
+x1_df$prob <- predict(model, newdata=x1_df, type="response")
+```
+
+```{r mlr-outputs}
+## 5. After fitting the model, create a logistic regression curve plot for each
+##    independent variable used. Export the plots as PDF files.
+plot(x1_fact, y,
+  pch  = 19,
+  xlab = "Habitat", ylab = "Detection probability",
+  ylim = c(0.0, 1.0))
+
+tmp <- unique(x1_df) |> arrange(c("CVT", "ASG", "ESG", "OGF"))
+graphics::lines(tmp$x1, tmp$prob, col="red", lwd=3)
+rm(tmp)
+
+library(ggplot2)
+
+ggplot2::ggplot(deer_df2, aes(x1_fact, y)) +
+  ggplot2::geom_boxplot() +
+  ggplot2::labs(title="Detection probability per habitat",
+    x = "Habitat", y = "Detection probability") +
+  ggplot2::geom_point(data=x1_df, aes(x1, prob))
+
+## 6. Now, output the model summary and examine the results.
+summary(model)
+
+## 7. In a Word document, put together all the plots (including the map) and
+##    and your interpretation of results.
+
+```

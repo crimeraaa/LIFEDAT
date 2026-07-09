@@ -1,0 +1,230 @@
+$deer_df
+       GenLocality       SpecificLocality Longitude Latitude TransectNo
+1   Balabac Island Barangay Malaking Ilog  117.0612   7.9331          1
+2   Balabac Island Barangay Malaking Ilog  117.0510   7.9318          2
+3   Balabac Island     Barangay Catagupan  116.9963   7.9501          3
+4   Balabac Island     Barangay Catagupan  117.0021   7.9562          4
+5   Balabac Island               Poblacio  117.0664   7.9804          5
+6   Balabac Island               Poblacio  117.0717   8.0051          6
+7   Balabac Island     Barangay Indalawan  117.0345   7.9209          7
+8   Balabac Island     Barangay Indalawan  117.0321   7.9086          8
+9     Ramos Island         Barangay Ramos  117.0297   8.0790          9
+10    Ramos Island         Barangay Ramos  117.0259   8.0861         10
+11    Ramos Island         Barangay Ramos  117.0400   8.0865         11
+12   Bugsuk Island      Barangay Sebaring  117.2821   8.1991         12
+13   Bugsuk Island      Barangay Sebaring  117.2856   8.2023         13
+14   Bugsuk Island        Barangay Bugsuk  117.3033   8.2459         14
+15   Bugsuk Island        Barangay Bugsuk  117.3153   8.2380         15
+16   Bugsuk Island        Barangay Bugsuk  117.3075   8.2281         16
+17 Bancalan Island      Barangay Bancalan  117.1019   8.2279         17
+18 Pandanan Island      Barangay Pandanan  117.2200   8.3039         18
+19 Pandanan Island      Barangay Pandanan  117.2099   8.2939         19
+   Effort Habitat HabitatCode AverageDistance Detected
+1       2     CVT           1           11.00        0
+2       2     ASG           3           11.25        1
+3       2     ASG           3           21.00        0
+4       2     ESG           2           21.00        1
+5       2     ESG           2            0.00        1
+6       2     ESG           2            0.00        0
+7       4     ESG           2            0.00        1
+8       3     ESG           2            0.00        1
+9       3     ESG           2            0.00        0
+10      3     CVT           1            0.00        0
+11      3     ESG           2            0.00        0
+12      2     ESG           2            7.30        1
+13      2     ESG           2            7.30        1
+14      2     OGF           4           11.60        1
+15      2     ESG           2           11.60        1
+16      2     ESG           2           11.60        1
+17      2     CVT           1            0.00        0
+18      2     ASG           3            0.00        0
+19      2     ASG           3            0.00        0
+
+$deer_df2
+   x1 x1_fact    x2 y
+1   1     CVT 11.00 0
+2   3     ASG 11.25 1
+3   3     ASG 21.00 0
+4   2     ESG 21.00 1
+5   2     ESG  0.00 1
+6   2     ESG  0.00 0
+7   2     ESG  0.00 1
+8   2     ESG  0.00 1
+9   2     ESG  0.00 0
+10  1     CVT  0.00 0
+11  2     ESG  0.00 0
+12  2     ESG  7.30 1
+13  2     ESG  7.30 1
+14  4     OGF 11.60 1
+15  2     ESG 11.60 1
+16  2     ESG 11.60 1
+17  1     CVT  0.00 0
+18  3     ASG  0.00 0
+19  3     ASG  0.00 0
+
+$deer_ext
+SpatExtent : 116.99630000000001, 117.31529999999999, 7.9085999999999999, 8.3039000000000005 (xmin, xmax, ymin, ymax)
+
+$deer_x1
+ [1] CVT ASG ASG ESG ESG ESG ESG ESG ESG CVT ESG ESG ESG OGF ESG ESG CVT ASG
+[19] ASG
+Levels: ASG CVT ESG OGF
+
+$deer_x2
+ [1] 11.00 11.25 21.00 21.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  7.30
+[13]  7.30 11.60 11.60 11.60  0.00  0.00  0.00
+
+$deer_y
+ [1] 0 1 0 1 1 0 1 1 0 0 0 1 1 1 1 1 0 0 0
+
+$mlr_df
+   deer_x1 deer_x2 deer_y
+1      CVT   11.00      0
+2      ASG   11.25      1
+3      ASG   21.00      0
+4      ESG   21.00      1
+5      ESG    0.00      1
+6      ESG    0.00      0
+7      ESG    0.00      1
+8      ESG    0.00      1
+9      ESG    0.00      0
+10     CVT    0.00      0
+11     ESG    0.00      0
+12     ESG    7.30      1
+13     ESG    7.30      1
+14     OGF   11.60      1
+15     ESG   11.60      1
+16     ESG   11.60      1
+17     CVT    0.00      0
+18     ASG    0.00      0
+19     ASG    0.00      0
+
+$model
+
+Call:  stats::glm(formula = y ~ x1_fact + x2, family = binomial, data = deer_df2)
+
+Coefficients:
+(Intercept)   x1_factCVT   x1_factESG   x1_factOGF           x2  
+    -2.9153     -16.5236       3.2837      19.5580       0.1658  
+
+Degrees of Freedom: 18 Total (i.e. Null);  14 Residual
+Null Deviance:	    26.29 
+Residual Deviance: 14.64 	AIC: 24.64
+
+$pal_dem_sr
+class       : SpatRaster
+size        : 6195, 5288, 1  (nrow, ncol, nlyr)
+resolution  : 0.0008333333, 0.0008333333  (x, y)
+extent      : 116.9283, 121.335, 7.506807, 12.66931  (xmin, xmax, ymin, ymax)
+coord. ref. : lon/lat WGS 84 (EPSG:4326)
+source(s)   : memory
+varname     : ph_strm_geo
+name        : Elevation
+min value   :      -167
+max value   :      2065
+
+$pal_ext
+SpatExtent : 116.92833709716808, 121.33520507812523, 7.506939888000602, 12.669719696045036 (xmin, xmax, ymin, ymax)
+
+$pal_grad_vec
+[1] "#2B89BA" "#ABDDA4" "#FFFFBF" "#FDAE61" "#D71910"
+
+$pal_sf
+Simple feature collection with 1 feature and 0 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: 116.9283 ymin: 7.50694 xmax: 121.3352 ymax: 12.66972
+Geodetic CRS:  WGS 84
+                        geometry
+1 MULTIPOLYGON (((117.3139 7....
+
+$ph_dem_sr
+class       : SpatRaster
+size        : 19780, 11612, 1  (nrow, ncol, nlyr)
+resolution  : 0.0008333333, 0.0008333333  (x, y)
+extent      : 116.9283, 126.605, 4.586807, 21.07014  (xmin, xmax, ymin, ymax)
+coord. ref. : lon/lat WGS 84 (EPSG:4326)
+source      : ph_strm_geo.tif
+name        : Band_1
+
+$prob_df
+         x1       x2         prob
+1  1.000000 5.981579 9.739344e-09
+2  1.166667 5.981579 1.274675e-01
+3  1.333333 5.981579 1.274675e-01
+4  1.500000 5.981579 7.957838e-01
+5  1.666667 5.981579 7.957838e-01
+6  1.833333 5.981579 7.957838e-01
+7  2.000000 5.981579 7.957838e-01
+8  2.166667 5.981579 7.957838e-01
+9  2.333333 5.981579 7.957838e-01
+10 2.500000 5.981579 9.739344e-09
+11 2.666667 5.981579 7.957838e-01
+12 2.833333 5.981579 7.957838e-01
+13 3.000000 5.981579 7.957838e-01
+14 3.166667 5.981579 1.000000e+00
+15 3.333333 5.981579 7.957838e-01
+16 3.500000 5.981579 7.957838e-01
+17 3.666667 5.981579 9.739344e-09
+18 3.833333 5.981579 1.274675e-01
+19 4.000000 5.981579 1.274675e-01
+
+$x1
+ [1] 1 3 3 2 2 2 2 2 2 1 2 2 2 4 2 2 1 3 3
+
+$x1_df
+    x1       x2         prob
+1  CVT 5.981579 9.739344e-09
+2  ASG 5.981579 1.274675e-01
+3  ASG 5.981579 1.274675e-01
+4  ESG 5.981579 7.957838e-01
+5  ESG 5.981579 7.957838e-01
+6  ESG 5.981579 7.957838e-01
+7  ESG 5.981579 7.957838e-01
+8  ESG 5.981579 7.957838e-01
+9  ESG 5.981579 7.957838e-01
+10 CVT 5.981579 9.739344e-09
+11 ESG 5.981579 7.957838e-01
+12 ESG 5.981579 7.957838e-01
+13 ESG 5.981579 7.957838e-01
+14 OGF 5.981579 1.000000e+00
+15 ESG 5.981579 7.957838e-01
+16 ESG 5.981579 7.957838e-01
+17 CVT 5.981579 9.739344e-09
+18 ASG 5.981579 1.274675e-01
+19 ASG 5.981579 1.274675e-01
+
+$x1_fact
+ [1] CVT ASG ASG ESG ESG ESG ESG ESG ESG CVT ESG ESG ESG OGF ESG ESG CVT ASG
+[19] ASG
+Levels: ASG CVT ESG OGF
+
+$x2
+ [1] 11.00 11.25 21.00 21.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  7.30
+[13]  7.30 11.60 11.60 11.60  0.00  0.00  0.00
+
+$x2_df
+   x1        x2         prob
+1   1  0.000000 3.612510e-09
+2   3  1.166667 6.169507e-02
+3   3  2.333333 7.388882e-02
+4   2  3.500000 7.208521e-01
+5   2  4.666667 7.580705e-01
+6   2  5.833333 7.917602e-01
+7   2  7.000000 8.218609e-01
+8   2  8.166667 8.484435e-01
+9   2  9.333333 8.716786e-01
+10  1 10.500000 2.060115e-08
+11  2 11.666667 9.091053e-01
+12  2 12.833333 9.238748e-01
+13  2 14.000000 9.364123e-01
+14  4 15.166667 1.000000e+00
+15  2 16.333333 9.559134e-01
+16  2 17.500000 9.633834e-01
+17  1 18.666667 7.979129e-08
+18  3 19.833333 5.922176e-01
+19  3 21.000000 6.379734e-01
+
+$y
+ [1] 0 1 0 1 1 0 1 1 0 0 0 1 1 1 1 1 0 0 0
+
