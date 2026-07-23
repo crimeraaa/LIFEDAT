@@ -11,3 +11,7 @@ This repository contains the files used for Data Science for Life Scientists.
 | 09 | [Dimension Reduction: Principal Components Analysis (PCA)](https://crimeraaa.github.io/LIFEDAT/myrmarkdown/Poblete_hclust2.html) |
 | 10 | [Geographic Information System](https://crimeraaa.github.io/LIFEDAT/myrmarkdown/Poblete_gis.html) |
 | 11 | [Linear Regression](https://crimeraaa.github.io/LIFEDAT/myrmarkdown/Poblete_linear_reg.html)
+| 12 | [Logistic Regression](https://crimeraaa.github.io/LIFEDAT/myrmarkdown/Poblete_logistic_reg.html)
+| 13 | [Random Forest](https://crimeraaa.github.io/LIFEDAT/myrmarkdown/Poblete_randforest_reg.html)
+| 14 | [Gradient Boosting](https://crimeraaa.github.io/LIFEDAT/myrmarkdown/Lasquite_Poblete_gradient_boost.html)
+

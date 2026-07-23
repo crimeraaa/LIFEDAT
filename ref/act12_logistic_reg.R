@@ -34,7 +34,7 @@
 ## X  = predictor variable
 ## z  = linear predictor
 
-z <- beta0 + beta1 * X
+# z <- beta0 + beta1 * X
 
 ## 2. Logistic Regression Equation
 
@@ -42,14 +42,14 @@ z <- beta0 + beta1 * X
 
 ## P(Y = 1) = probability of the event occurring
 
-P <- 1 / (1 + exp(-(beta0 + beta1 * X)))
+# P <- 1 / (1 + exp(-(beta0 + beta1 * X)))
 
 ## 3. Logit (Log-Odds) Equation
 
 ## log(P / (1 - P)) = β0 + β1X
 ## P = predicted probability
 
-logit <- log(P / (1 - P))
+# logit <- log(P / (1 - P))
 
 
 ## 4. Perform Simple Logistic Regression
@@ -313,10 +313,10 @@ legend("bottomright",
 ## ...
 ## βk = coefficient for predictor Xk
 
-z <- beta0 +
-     beta1 * X1 +
-     beta2 * X2 +
-     beta3 * X3
+# z <- beta0 +
+#      beta1 * X1 +
+#      beta2 * X2 +
+#      beta3 * X3
 
 ## 2. Logistic Regression Equation
 
@@ -326,10 +326,10 @@ z <- beta0 +
 ## 1 + exp(-(β0 + β1X1 + β2X2 + ... + βkXk))
 ##
 
-P <- 1 / (1 + exp(-(beta0 +
-                    beta1 * X1 +
-                    beta2 * X2 +
-                    beta3 * X3)))
+# P <- 1 / (1 + exp(-(beta0 +
+#                     beta1 * X1 +
+#                     beta2 * X2 +
+#                     beta3 * X3)))
 
 ## 3. Logit (Log-Odds) Equation
 
@@ -337,7 +337,7 @@ P <- 1 / (1 + exp(-(beta0 +
 ##      =
 ## β0 + β1X1 + β2X2 + ... + βkXk
 
-logit <- log(P / (1 - P))
+# logit <- log(P / (1 - P))
 
 
 ### Perfom with glm() using random data

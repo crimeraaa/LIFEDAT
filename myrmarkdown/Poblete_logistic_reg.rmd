@@ -2,139 +2,271 @@
 title: 'Activity 12: Logistic Regression'
 author: "Jerome Poblete"
 date: "2026-07-09"
-output: html_document
+output:
+  html_document:
+    # Change this to `no` if you want the plot outputs in `Poblete_logistc_reg_files/*`
+    self_contained: yes
 ---
 
 ```{r setup, include=FALSE}
-# rm(list=ls())
+rm(list=ls())
 knitr::opts_chunk$set(echo=TRUE)
 ```
 
-
 # Fitting multiple logistic regression
+## 2. Read in the species data and remove unnecessary rows with NAs.
 Read in and clean the data.
 ```{r mlr-read-data}
-## 2. Read in the species data and remove unnecessary rows with NAs.
 deer_df <- utils::read.csv("../data/ph_mouse_deer.csv")
 deer_df <- deer_df[complete.cases(deer_df), ]
 ```
 
+## 3. Map generation
 Prepare the data needed to generate the map.
-```{r mlr-generate-map, eval=FALSE}
-## 3. Generate a map showing the species' observations localities using the 
+```{r mlr-generate-map, eval=TRUE}
+################################################################################
+##    Generate a map showing the species' observations localities using the 
 ##    longitude and latitude coordinates. Check Activity 10 and use the 
 ##    provided codes as your guide for creating the map. Export the map as a
 ##    PDF file.
+################################################################################
 library(sf)
 library(terra)
 library(dplyr)
-
-pal_sf <- sf::st_read("../data/PHL_adm/PHL_adm1.shp") |>
-  dplyr::filter(NAME_1 == "Palawan") |>
-  dplyr::select(geometry)
-
-## x=Longitude, y=Latitude
-x        <- deer_df$Longitude
-y        <- deer_df$Latitude
-deer_ext <- terra::ext(min(x), max(x), min(y), max(y))
-pal_ext  <- pal_sf |> terra::ext()
-rm(x, y)
-
-## Remove outliers.
-deer_df <- deer_df |> dplyr::filter(
-  dplyr::between(Longitude, pal_ext$xmin, pal_ext$xmax),
-  dplyr::between(Latitude,  pal_ext$ymin, pal_ext$ymax))
-
-## Clip Philippine digital elevation model using our selected Province (Palawan).
-ph_dem_sr <- terra::rast("../data/ph_strm_geo.tif")
-
-## Transform if needed.
-pal_sf <- pal_sf |> sf::st_transform(ph_dem_sr |> sf::st_crs())
-
-## Clip raster.
-pal_dem_sr <- ph_dem_sr |> terra::crop(pal_sf) |> terra::mask(pal_sf)
-
-## Convert demarcation(?) data for ggplot.
-names(pal_dem_sr) <- "Elevation"
 ```
 
-Generate and draw the map.
-```{r plot-dem, eval=FALSE}
+### 3.1. Get only the data for {Balabac,Ramos,Bugsuk,Bancalan,Pandanan}, Palawan.
+Filtering by Palawan is necessary as there is also Ramos, Tarlac.
+```{r mlr-generate-map-}
+################################################################################
+##  adm0 = country
+##  adm1 = provincial
+##  adm2 = municipal
+##  adm3 = barangay
+##
+##  Note that the CSV has things like "Balabac Island" and "Ramos Island".
+##  However, the shapefile only has "Balabac" and "Ramos", so fix them by
+##  removing " Island" so we can actually select them from the shapefile.
+################################################################################
+idk    <- function(x) x |> unique() |> sapply(\(x2) sub("\\s\\w+", "", x2))
+pal_sf <- sf::st_read("../data/PHL_adm/PHL_adm3.shp") |>
+  dplyr::filter(NAME_1 == "Palawan", NAME_3 %in% idk(deer_df$GenLocality)) |>
+  dplyr::select(geometry)
+
+################################################################################
+##  Remove outliers.
+##  x = Longitude
+##  y = Latitude
+################################################################################
+pal_ext <- terra::ext(pal_sf)
+deer_df <- deer_df |>
+  dplyr::filter(
+    dplyr::between(Longitude, pal_ext$xmin, pal_ext$xmax),
+    dplyr::between(Latitude,  pal_ext$ymin, pal_ext$ymax)) |>
+  dplyr::arrange(AverageDistance)
+```
+
+### 3.2. Generate and draw the map
+```{r plot-dem, eval=TRUE}
 library(ggplot2)
 library(ggnewscale)
 
-## Visualize the lowest to highest points.
-pal_grad_vec <- c("#2B89BA", "#ABDDA4", "#FFFFBF", "#FDAE61", "#D71910")
+## Clip Philippine digital elevation model using our selected Province (Palawan).
+phil_dem_spatr <- terra::rast("../data/ph_strm_geo.tif")
 
+## Transform if needed.
+pal_sf <- sf::st_transform(pal_sf, sf::st_crs(phil_dem_spatr))
+
+## Clip raster.
+pal_dem_spatr <- phil_dem_spatr |> terra::crop(pal_sf) |> terra::mask(pal_sf)
+
+## Convert demarcation(?) data for ggplot.
+names(pal_dem_spatr) <- "Elevation"
+
+## Visualize the lowest to highest points.
+pal_grad_vect <- c("#2B89BA", "#ABDDA4", "#FFFFBF", "#FDAE61", "#D71910")
+
+################################################################################
 ## Plot DEM.
-ggplot2::ggplot(terra::as.data.frame(pal_dem_sr, xy=TRUE)) +
-  ggplot2::geom_tile(aes(x, y,fill=Elevation)) +
+################################################################################
+ggplot2::ggplot(terra::as.data.frame(pal_dem_spatr, xy=TRUE)) +
+  ggplot2::geom_tile(aes(x, y, fill=Elevation)) +
   
   ## Change color manually.
-  ggplot2::scale_fill_gradientn(colors=pal_grad_vec, name="Elevation (m)") +
+  ggplot2::scale_fill_gradientn(colours=pal_grad_vect, name="Elevation (m)") +
   
   ## Plot sampling points as well.
   ggnewscale::new_scale_fill() +
   ggplot2::geom_point(data=deer_df, ## Override the chained implicit argument!
     mapping = aes(Longitude, Latitude),
     shape   = 21,
-    color   = "black",
+    colour  = "black",
     size    = 1.0,
     stroke  = 1.0) +
 
   ## Finalization
   ggplot2::coord_equal() +
-  ggplot2::labs(title="Palawan Province", x="Longitude", y="Latitude") +
+  ggplot2::labs(title="Philippine mouse-deer occurrences",
+    subtitle="Palawan Province, Philippines",
+    x="Longitude", y="Latitude") +
   ggplot2::theme_bw()
 
 ## Save the most recent ggplot (the last one!) to a PDF file.
-ggplot2::ggsave("PH_Mouse_deer.pdf")
+ggplot2::ggsave("PH_Mouse_deer_map.pdf")
 ```
+
+## 4. Perform multiple logistic regression.
+Use the `glm` function, ensuring that the habitat types (e.g. HabitatCode) are
+treated as  categorical variables by converting them to factors.
 
 ```{r mlr-perform}
-## 4. Using the `glm()` function, perform multiple logistic regression.
-##    Ensure that the habitat types (.e. HabitatCode) are treated as 
-##    categorical variables by converting them to factors.
-##
-#################################################################################
-## 4.1. Multiple Logistic Regression
-#################################################################################
-x1_fact  <- factor(deer_df$Habitat)
-x1       <- deer_df$HabitatCode
-x2       <- deer_df$AverageDistance
-y        <- deer_df$Detected
-deer_df2 <- data.frame(x1, x1_fact, x2, y)
-model    <- stats::glm(y ~ x1_fact + x2, family=binomial, data=deer_df2)
+################################################################################
+##  Multiple logistic regression models the relationship between two/more (2/+)
+##  predictor variables against one (1) binary (base-2) response variable.
+################################################################################
 
-## Calculate the predicted probabilites.
-x1_df      <- data.frame(x1=x1_fact, x2=mean(x2))
-x1_df$prob <- predict(model, newdata=x1_df, type="response")
+x1 <- factor(deer_df$Habitat)
+x2 <- deer_df$AverageDistance
+y  <- deer_df$Detected
+
+deer_glm_df <- data.frame(x1, x2, y)
+deer_glm    <- stats::glm(y ~ x1 + x2, family=binomial, data=deer_glm_df)
+
+################################################################################
+##  Calculate the predicted probabilities, holding the predictor x2 constant.
+##
+##  Since `x1` is already a `factor`, we don't need to worry about the range of
+##  values and their corresponding labels.
+################################################################################
+x1_df      <- data.frame(x1, x2=mean(x2))
+x1_df$prob <- predict(deer_glm, newdata=x1_df, type="response")
+
+
+################################################################################
+##  Calculate the predicted probabilities of x2 (Average Distance), holding each
+##  level of the predictor x1 (Habitat) constant.
+################################################################################
+predict_x2 <- function(habitat) {
+  x1_orig  <- x1
+  x1       <- rep(habitat, length(x2))
+  df       <- data.frame(x1_orig, x1, x2)
+  df$prob  <- predict(deer_glm, newdata=df, type="response")
+  return(df)
+}
+
+x2_df <- data.frame(x1)
+for (habitat in levels(x1)) {
+  x2_df[[habitat]] <- predict_x2(habitat)
+}
 ```
 
-```{r mlr-outputs}
-## 5. After fitting the model, create a logistic regression curve plot for each
-##    independent variable used. Export the plots as PDF files.
-plot(x1_fact, y,
+## 5. Logistic regression curve plot
+After fitting the model, create a logistic regression curve plot for each
+independent variable used.
+Export the plots as PDF files.
+```{r mlr-outputs-base}
+library(ggplot2)
+
+## Optional colors, I just like them more
+atom_onedark <- data.frame(
+  black    = "#282C34",
+  lightred = "#E06C75",
+  green    = "#98C379",
+  yellow   = "#E5C07B",
+  blue     = "#61AFEF",
+  magenta  = "#C678DD",
+  cyan     = "#56B6C2",
+  white    = "#ABB2BF",
+  darkred  = "#BE5046"
+)
+
+################################################################################
+## Base R plot
+################################################################################
+plot(x1, y,
   pch  = 19,
+  main = "Detection probability of mean distance",
   xlab = "Habitat", ylab = "Detection probability",
   ylim = c(0.0, 1.0))
 
-tmp <- unique(x1_df) |> arrange(c("CVT", "ASG", "ESG", "OGF"))
-graphics::lines(tmp$x1, tmp$prob, col="red", lwd=3)
-rm(tmp)
+## Operates on the most recently drawn plot.
+## Draws the lines at corresponding coordinates given by x and y (the 1st two
+## arguments).
+graphics::lines(x1_df$x1, x1_df$prob, col=atom_onedark$lightred, lwd=3)
 
-library(ggplot2)
 
-ggplot2::ggplot(deer_df2, aes(x1_fact, y)) +
-  ggplot2::geom_boxplot() +
-  ggplot2::labs(title="Detection probability per habitat",
-    x = "Habitat", y = "Detection probability") +
-  ggplot2::geom_point(data=x1_df, aes(x1, prob))
+level2colour <- c(
+  ASG=atom_onedark$lightred,
+  CVT=atom_onedark$blue,
+  ESG=atom_onedark$green,
+  OGF=atom_onedark$yellow)
 
-## 6. Now, output the model summary and examine the results.
-summary(model)
+draw_x2 <- function(habitat) {
+  ## Logistic regression curve plot for Average distance, holding each habitat
+  ## code constant when calculating the lines.
+  plot(x2, y,
+    pch  = 19,
+    main = paste0("Detection probability of ", habitat),
+    xlab = "Average distance", ylab = "Detection probability",
+    ylim = c(0.0, 1.0))
 
-## 7. In a Word document, put together all the plots (including the map) and
-##    and your interpretation of results.
+  ## Assume data is already sorted by average distance. This ensures that the
+  ## line goes only in one direction.
+  df <- x2_df[[habitat]]
+  x  <- df$x2
+  y  <- df$prob
+  graphics::lines(x, y, col=level2colour[[habitat]], lwd=3)
+}
 
+for (habitat in levels(x1)) {
+  draw_x2(habitat)
+}
 ```
+
+## 6. Model summary output
+```{r six-seven}
+summary(deer_glm)
+```
+
+Examination of results
+
+### i.) Detection probability of mean distance per habitat type
+
+Holding the average distance constant by getting its average, the plot tells us
+that the Philippine Mouse-deer is absent (y=0) in the ASG (x1=1) and CVT (x1=2)
+habitats surveyed.
+The deer is present in ESG (x1=3) and OGF (x1=4).
+
+The probability line, in red, shows that, at the average of the mean distances
+(mean(x2)=4.49), then the habitats ASG, CVT, and ESG have almost 100% (y>0.99)
+detection probability while OGF has an almost 0% (y<2e-10) detection probability.
+
+These results are interesting because both ASG and CVT have no instances of the
+deer recorded yet were determine to have an almost 100% detection probability.
+Also, OGF has one (1) instance (x2=11.6) yet has 0% detection probability.
+This may have to do with the fact the average (x=4.49) was what we used to hold
+the average distance constant.
+At a glance I would say that 0.0 is "closer" to 4.49 than 11.66, which may
+explain why the model calculated a nonzero detection probability.
+
+### ii.) Detection probability of each habitat type per average distance
+
+For each habitat type, each particular type was held constant when calculating
+the probabilities for the average distances.
+That is, a logistic regression curve plot was generated for Average distance x
+Detection probability holding one habitat type, for example ASG, constant.
+This process was repeated for the other habitat types with new plots.
+
+Habitat types ASG, CVT, and ESG all resulted in the same plot. The sampling
+points with distances of 0.0 (x2=0.0) all had a near 0% (prob=7.88e-12)
+detection probability. However, at distances of 7.3 (x2=7.3) and 11.6 (x2=11.6)
+the detection probability was 100% (prob=1.0). Like in the previous plot,
+this was expected for ESG, but not for ASG and CVT.
+
+The only different plot was one with OGF. It differed only in the detection
+probabilities of distances of 7.3 (x2=0.0). The detection probability for this
+was almost 0% (prob < 2.22e-16) instead of 100% as in the first three (3) plots.
+
+
+## 7. In a Word document...
+...put together all of the plots, including the map and your interpretation of results.

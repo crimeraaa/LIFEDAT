@@ -1,0 +1,21 @@
+---
+title: "Activity 14 - Gradient Boosting"
+author: "Faith Lasquite & Jerome Poblete"
+date: "2026-07-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Define gradient boosting & explain how it differs from random forest.
+
+## Then, similar to random forest, enumerate the implementation types of gradient boosting.
+Also provide a brief description of each.
+
+## Pick one (1) type of gradient boosting implementation.
+Using AI, study the steps for implementing it.
+
+## Lastly, implement the steps manually in R without any packages.
+ruh roh raggy
