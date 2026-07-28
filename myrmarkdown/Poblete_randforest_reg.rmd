@@ -1,0 +1,265 @@
+---
+title: 'Activity 13: Random Forest'
+author: "Jerome Poblete"
+date: "2026-07-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo=TRUE)
+```
+
+# Base R Random Forest
+
+## 2.) Read in the acoustic data
+Remember to remove unnecessary columns (i.e. column 1).
+Remember that your response variable is the species column.
+```{r read-in-data}
+call_data_df <- utils::read.csv("../data/call_data_12October2025.csv")
+call_data_df <- call_data_df[complete.cases(call_data_df), -1]
+```
+
+## 3.) Design your cartesian grid.
+Use the R `ranger` package to perform a random forest that iterates on each 
+hyperparameter combination.
+
+We can employ one (1) of two (2) methods.
+
+### i. Classification Random Forest
+- Used when the response variable is categorical (e.g. factor)
+- Final prediction is based on **majority vote**
+- Split criterion: *Gini impurity* (G) to measure node purity
+    ```
+    G = 1 - sum(p_i^2)
+    
+    where
+    
+    p_i = proportion of class i
+    ```
+- Smaller Gini = purer nodes
+
+### ii. Regression Random Forest
+- Used when the response variable is continuous
+- Final prediction is based on **average** of all tree predictions
+- Split criterion: Minimizes the *Residual Sum of Squares* (=RSS)
+    ```
+    RSS = sum((y_i - y_bar)^2)
+    
+    where
+    y_i   = observed value
+    y_bar = mean of node
+    ```
+
+```{r design-cartesian-grid}
+library(dplyr)
+library(ranger)
+
+################################################################################
+## A. Pick your poisons: predictor (x) and response (y) variables
+################################################################################
+x_df <- dplyr::select(call_data_df, Average_Frequency:Max_Amplitude)
+
+## [1, ]: Species
+y_df <- dplyr::select(call_data_df, Species)
+
+## Number of observations
+n <- nrow(call_data_df)
+
+## Number of predictors
+p <- ncol(x_df)
+
+
+################################################################################
+## B. Specify response variable
+################################################################################
+response_string <- "Species"
+
+## Set hyperparamters
+set.seed(123)
+ntree <- 5
+
+## Number of randomly selected predictors
+mtry <- p |> sqrt() |> floor()
+
+
+## Define the Gini impurity function
+gini <- function(y) {
+    ## Proportions of y
+    p <- table(y_df) / length(y_df)
+    return(1 - sum(p^2))
+}
+
+
+## Create a (zero-initialized) vector to store results, of size `ntree`.
+forest_list <- vector("list", ntree)
+
+## Zero-initialized numeric vector of size `ntree`.
+oob_error_list <- numeric(ntree)
+
+## Number literal 0 repeated `p` times.
+importance_list        <- rep(0, p)
+names(importance_list) <- names(x_df)
+```
+
+```{r gini-perform}
+vprint <- function(..., sep = " ") print(paste(..., sep=sep))
+
+
+## Build the format.
+for (tree_index in 1:ntree) {
+    vprint("Building Tree ", tree_index)
+    
+    ############################################################################
+    ## C. Bootstrap the sample
+    ############################################################################
+    
+    ## Take a sample from the input vector, of specified size, with replacement.
+    boot_index   <- sample(1:n, size=n, replace=TRUE)
+    boot_data_df <- call_data_df[boot_index, ]
+    
+    ## Out-of-bag observations
+    ## `setdiff` is the difference between the two (2) sets.
+    oob_index <- setdiff(1:n, unique(boot_index))
+    
+    ############################################################################
+    ## D. Randomly select `mtry` predictors
+    ############################################################################
+    selected <- sample(names(x_df), mtry)
+    
+    vprint("Selected predictors:", paste(selected, collapse=", "))
+    
+    ############################################################################
+    ## E. Evaluate all possible splits
+    ############################################################################
+    best_gini     <- Inf
+    best_split    <- NA
+    best_variable <- NA
+    
+    for (variable in selected) {
+        ## One-dimensional (1-dimensional) vector of some predictor variable.
+        predictor_df <- boot_data_df[[variable]]
+        values       <- predictor_df |> unique() |> sort()
+        if (length(values) < 2) {
+            next
+        }
+        
+        splits_list <- (values[-1] + values[-length(values)]) / 2
+        for (split in splits_list) {
+            ## Use the following to filter.
+            left_df  <- boot_data_df[predictor_df <= split, ]
+            right_df <- boot_data_df[predictor_df > split, ]
+            
+            ## No data points to work with?
+            if (nrow(left_df) == 0 || nrow(right_df) == 0) {
+                next
+            }
+            
+            left_gini_df  <- gini(left$Species)
+            right_gini_df <- gini(right$Species)
+            weighted_gini <-
+                (nrow(left_df)  / nrow(boot_data_df) * left_gini_df) +
+                (nrow(right_df) / nrow(boot_data_df) * right_gini_df)
+          
+            ## Remember: lower Gini indicates purer nodes!
+            if (weighted_gini < best_gini) {
+                best_gini    <- weighted_gini
+                best_split   <- split
+                best_variable <- variable
+            }
+        }
+    }
+
+    ############################################################################
+    ## F. Choose the best split
+    ############################################################################
+    vprint("Best variable :", best_variable)
+    vprint("Best split    :", best_split)
+    vprint("Weighted Gini :", best_gini)
+
+    ############################################################################
+    ## G. Grow the tree
+    ##
+    ## This example performs only the root split. A complete tree would
+    ## recursively ## repeat the splitting process on each child node.
+    ############################################################################
+    ## Split the main data frame, row-wise, into left and right portions.
+    best_variable_list  <- boot_data_df[[best_variable]]
+    left_df             <- boot_data_df[best_variable_list <= best_split, ]
+    right_df            <- boot_data_df[best_variable_list >  best_split, ]
+    left_prediction     <- left_df$Species  |> table() |> which.max() |> names()
+    right_prediction    <- right_df$Species |> table() |> which.max() |> names()
+    
+    vprint("Left node predicts  :", left_prediction)
+    vprint("Right node predicts :", right_prediction)
+    
+    ## Save the tree.
+    forest_list[[tree_index]] <- list(
+        variable    = best_variable,
+        split       = best_split,
+        left_class  = left_prediction,
+        right_class = right_prediction)
+
+    ############################################################################
+    ## J. Compute the Out-of-Bar error
+    ############################################################################
+    if (length(oob_index) > 0) {
+        oob_df <- call_data_df[oob_index, ]
+        prediction_list <- ifelse(
+            oob_df[[best_variable]] <= best_split,
+            left_prediction,
+            right_prediction)
+        
+        ## `y` doesn't have a `levels` attribute, unlike the reference script.
+        ## We don't need it anyway since the default behavior is the use the
+        ## input as the basis for the levels, via `as.character() |> unique()
+        ## |> sort()`.
+        prediction_factor          <- factor(prediction_list)
+        oob_error_list[tree_index] <- mean(prediction_factor != oob_df$Species)
+        vprint("OOB Error ", tree_index, "=", oob_error_list[tree_index])
+    }
+
+    ############################################################################
+    ## K. Variable importance
+    ##
+    ## Counts how many times each predictor becomes the best split.
+    ############################################################################
+    importance_list[best_variable] <- importance_list[best_variable] + 1
+}
+
+################################################################################
+## H. Forest completed
+################################################################################
+vprint("Forest construction completed! Yeehaw!")
+```
+
+## 4.) Pick the best hyperparameter combination...
+...that minimizes the out-of-bag error.
+```{r combine-predictions}
+################################################################################
+## I. Combine predictions
+################################################################################
+shit       <- call_data_df[1, ]
+votes_list <- character(ntree)
+
+for (i in 1:ntree) {
+    tree <- forest_list[[i]]
+    if (shit[[tree$variable]] <= tree$split) {
+        votes_list[i] <- tree$left_class
+    } else {
+        votes_list[i] <- tree$right_class
+    }
+}
+
+final_prediction_string <- votes_list |> table() |> which.max() |> names()
+vprint("Votes from each tree     :", paste(votes_list, collapse=", "))
+vprint("Majority vote prediction :", final_prediction_string)
+vprint("Average OOB error        :", mean(oob_error_list))
+vprint("Variable importance      :", paste(importance_list, collapse=", "))
+```
+
+
+## 5.) Using the optimal hyperparameter...
+...provide a plot of variable importance, and predicted class probabilities.
+```{r plot-optimal-hyperparameters}
+```
