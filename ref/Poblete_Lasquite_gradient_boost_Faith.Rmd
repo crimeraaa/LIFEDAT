@@ -1,0 +1,85 @@
+---
+title: "Poblete_Lasquite_gradient_boost"
+author: "Hannah Lasquite and Jerome Poblete"
+output: html_document
+---
+
+# 1. What is Gradient Forest?
+# 2. Gradient Boosting vs. Random Forest
+# 3. Implementation of Gradient Boosting in Different Data Types
+# 4. Regression Gradient Boosting Without Packages
+
+# Step 1: Cleaning up our data, the in-built penguins dataset, and setting aside training and testing data.
+
+```{r S41, warning = FALSE}
+#Including only complete rows of data
+clean_penguin <- na.omit(penguins)
+
+#Randomize all the rows and split them for testing and training
+
+set.seed(123)
+random_penguin <- clean_penguin[sample(nrow(clean_penguin)), ]
+
+train_penguin <- random_penguin[1:233, ]  #70% of the dataset
+test_penguin <- random_penguin[234:333, ] #30% of the dataset
+```
+
+# Step 2: Assigning variables
+```{r S42, warning = FALSE}
+X <- train_penguin[, c("bill_len", "bill_dep", "flipper_len")]
+Y <- train_penguin$body_mass
+
+obN <- nrow(train_penguin)
+
+df <- data.frame(X,Y)
+
+pred1 <- mean(Y)
+pred2 <- rep(pred1, obN)
+```
+
+# Step 3: Gradient Boosting Loop
+```{r S43, warning = FALSE}
+n_trees <- 50
+learning_rate <- 0.1
+model <- list()
+
+for (i in 1:n_trees) {
+    residuals <- df$Y - pred2 #Residual for each row
+    inttree <- lm(residuals ~ bill_len + bill_dep + flipper_len, data = df)
+    
+    update_pred <- predict(inttree, newdata = df)
+  pred2 <- pred2 + (learning_rate * update_pred) #Update the predictions while its being scaled by the learning rate
+   model[[i]] <- inttree
+}
+
+predictdata <- function(new_data, model, pred1, learning_rate){
+  pred3 <- rep(pred1, nrow(new_data))
+  for (m in model) {
+    pred3 <- pred3 + (learning_rate * predict(m, new_data = newdata))
+  }
+  return(pred3)
+}
+
+final_preds <- predictdata(df, model, pred1, learning_rate)
+cat("Predicted Body Mass:\n", head(final_preds),"\n", "\n")
+cat("Actual Body Mass:\n", head(Y))
+```
+# Step 4: Testing on New Dataset
+```{r S44, warning = FALSE}
+X2 <- test_penguin[, c("bill_len", "bill_dep", "flipper_len")]
+Y2 <- test_penguin$body_mass
+
+obN2 <- nrow(test_penguin)
+
+df2 <- data.frame(X2,Y2)
+
+model2 <- list()
+
+pred_1 <- mean(Y2)
+
+final_preds2 <- predictdata(df2, model, pred_1, learning_rate)
+cat("Predicted Body Mass:\n", head(final_preds2),"\n", "\n")
+cat("Actual Body Mass:\n", head(Y2))
+```
+# Conclusion:
+*A penguin's bill depth, bill length, or flipper length are not accurate markers for it's overall body mass across different species*

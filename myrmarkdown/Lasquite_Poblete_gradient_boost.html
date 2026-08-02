@@ -666,6 +666,7 @@ points needed to filter out the data instances.</p>
 ################################################################################
 ## install.packages(&quot;lightgbm&quot;, repos = &quot;https://cran.r-project.org&quot;)
 library(lightgbm)</code></pre>
+<pre><code>## Warning: package &#39;lightgbm&#39; was built under R version 4.6.1</code></pre>
 <p>For training, we will be using the <code>agaricus.train</code> data
 set provided by the <code>lightgbm</code> package. Before we continue,
 it helps to understand what exactly the data set contains.</p>
@@ -714,14 +715,13 @@ bst1 &lt;- lightgbm(data = dtrain,
     ## 1 = print evaluation metric
     ## 2 = print evaluation metric and information about tree
     verbose = 2L)</code></pre>
-<pre><code>## Warning in .get_default_num_threads(): Optional package
-## &#39;RhpcBLASctl&#39; not found. Detection of CPU cores might not be
-## accurate.</code></pre>
+<pre><code>## Warning in .get_default_num_threads(): Optional package &#39;RhpcBLASctl&#39;
+## not found. Detection of CPU cores might not be accurate.</code></pre>
 <pre><code>## [LightGBM] [Info] Number of positive: 3140, number of negative: 3373
 ## [LightGBM] [Debug] Dataset::GetMultiBinFromSparseFeatures: sparse rate 0.930600
 ## [LightGBM] [Debug] Dataset::GetMultiBinFromAllFeatures: sparse rate 0.433362
-## [LightGBM] [Debug] init for col-wise cost 0.001697 seconds, init for row-wise cost 0.001690 seconds
-## [LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.002127 seconds.
+## [LightGBM] [Debug] init for col-wise cost 0.003712 seconds, init for row-wise cost 0.002422 seconds
+## [LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.004125 seconds.
 ## You can set `force_row_wise=true` to remove the overhead.
 ## And if memory is not enough, you can set `force_col_wise=true`.
 ## [LightGBM] [Debug] Using Sparse Multi-Val Bin
@@ -756,8 +756,8 @@ bst2 &lt;- lgb.train(train_params, dtrain,
 ## [LightGBM] [Info] Number of positive: 3140, number of negative: 3373
 ## [LightGBM] [Debug] Dataset::GetMultiBinFromSparseFeatures: sparse rate 0.930600
 ## [LightGBM] [Debug] Dataset::GetMultiBinFromAllFeatures: sparse rate 0.433362
-## [LightGBM] [Debug] init for col-wise cost 0.001040 seconds, init for row-wise cost 0.001664 seconds
-## [LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001498 seconds.
+## [LightGBM] [Debug] init for col-wise cost 0.001019 seconds, init for row-wise cost 0.001587 seconds
+## [LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001555 seconds.
 ## You can set `force_row_wise=true` to remove the overhead.
 ## And if memory is not enough, you can set `force_col_wise=true`.
 ## [LightGBM] [Debug] Using Sparse Multi-Val Bin
@@ -775,16 +775,18 @@ err2  &lt;- as.numeric(sum(as.integer(pred2 &gt; 0.5) != label)) / length(label)
 err2</code></pre>
 <pre><code>## [1] 0.02172564</code></pre>
 <pre class="r"><code>################################################################################
-## LightGBM: Boosting from Prediction
+## LightGBM: Boosting from an initial base prediction
 ################################################################################
 valids &lt;- list(eval = dtrain, test = dtest)
-bst3   &lt;- lgb.train(train_params, dtrain, verbose = 1L, valids = valids)</code></pre>
+
+## Start from an initial base prediction
+bst3 &lt;- lgb.train(train_params, dtrain, verbose = 1L, valids = valids)</code></pre>
 <pre><code>## [LightGBM] [Warning] num_threads is set=2, nthread=2 will be ignored. Current value: num_threads=2
 ## [LightGBM] [Warning] num_threads is set=2, nthread=2 will be ignored. Current value: num_threads=2
 ## [LightGBM] [Warning] num_threads is set=2, nthread=2 will be ignored. Current value: num_threads=2
 ## [LightGBM] [Warning] num_threads is set=2, nthread=2 will be ignored. Current value: num_threads=2
 ## [LightGBM] [Info] Number of positive: 3140, number of negative: 3373
-## [LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001637 seconds.
+## [LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001466 seconds.
 ## You can set `force_row_wise=true` to remove the overhead.
 ## And if memory is not enough, you can set `force_col_wise=true`.
 ## [LightGBM] [Info] Total Bins 214
@@ -962,7 +964,7 @@ bst3   &lt;- lgb.train(train_params, dtrain, verbose = 1L, valids = valids)</cod
 <pre class="r"><code>## We need the margin value instead of the transformed prediction as in
 ## `set_init_score`.
 ptrain &lt;- stats::predict(bst3, agaricus.train$data, type = &quot;raw&quot;)
-ptest  &lt;- stats::predict(bst3, agaricus.test$data, type = &quot;raw&quot;)
+ptest  &lt;- stats::predict(bst3, agaricus.test$data,  type = &quot;raw&quot;)
 
 lightgbm::set_field(dtrain, &quot;init_score&quot;, ptrain)
 lightgbm::set_field(dtest,  &quot;init_score&quot;, ptest)
@@ -977,7 +979,7 @@ bst4 &lt;- lgb.train(train_params,
 ## [LightGBM] [Warning] num_threads is set=2, nthread=2 will be ignored. Current value: num_threads=2
 ## [LightGBM] [Warning] num_threads is set=2, nthread=2 will be ignored. Current value: num_threads=2
 ## [LightGBM] [Info] Number of positive: 3140, number of negative: 3373
-## [LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001283 seconds.
+## [LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.001552 seconds.
 ## You can set `force_row_wise=true` to remove the overhead.
 ## And if memory is not enough, you can set `force_col_wise=true`.
 ## [LightGBM] [Info] Total Bins 214
@@ -1000,6 +1002,20 @@ err3</code></pre>
 <div id="lastly-implement-the-steps-manually-in-r-without-any-packages." class="section level2">
 <h2>4) Lastly, implement the steps manually in R without any
 packages.</h2>
+<pre class="r"><code>## https://kuriko-iwai.com/research/gradient-boosting-machines-explained
+fuck &lt;- function(x, y, num_trees = 100L, learning_rate = 0.1, max_depth = 3) {
+    ## Initial prediction is based on the mean of the target values.
+    y_bar &lt;- mean(y)
+    
+    ## Initial prediction vector. 
+    F_0 &lt;- log(y_bar / (1 - y_bar))
+    F_m &lt;- rep(F_0, len(y))
+    for (i in 1:num_trees) {
+        ## Compute residuals.
+        p   &lt;- exp(F_m) / (1 + exp(F_m))
+        rho &lt;- y - p
+    }
+}</code></pre>
 </div>
 
 
