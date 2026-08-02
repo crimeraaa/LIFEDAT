@@ -6,16 +6,358 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
+rm(list = ls())
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Define gradient boosting & explain how it differs from random forest.
+## 1) Define gradient boosting & explain how it differs from random forest.
 
-## Then, similar to random forest, enumerate the implementation types of gradient boosting.
+In order to define gradient boosting, it helps to define some terms.
+
+
+### 1.1) Decision Tree
+
+All of the machine learning we will do will create so-called *Decision Trees*.
+These are flowchart-like structures that help us classify a particular point in
+a data set.
+[(IBM Research, 2026)](https://www.ibm.com/think/topics/decision-trees)
+
+It consists of a series of nodes, which represents a characteristic with a  cutoff point.
+We start with the first node, the *Root Node*, which represents the first characteristic we're after.
+If the data point's characteristic is  lower or higher/equal-to this characteristic, we proceed to the next appropriate node (i.e. we "decide" to go "left" or "right").
+This process continues until we hit the *Leaf Node*, which is the final characterization of the data point.
+
+> **NOTE:** This only works if all characteristics are numeric!
+
+
+### 1.2) Ensemble Learning
+This is technique for machine learning which aggregates (i.e. combines)  two-or-more (2/+) learners, such as regression models and/or neural networks, to produce better predictions.
+
+Why would we need this? Because an individual learner may not be accurate, it could over fit or under fit to the training data.
+By combining multiple of them, we hope to increase the overall accuracy.
+
+For our purposes, our *Learners* will be *Decision Trees*. This applies because *Decision Trees* can also over or under fit to the training data, so they can also benefit from this.
+
+
+#### 1.2.1) Fragmentation
+
+*Ensemble Learning* is useful for *Decision Trees* because large trees can become *fragmented*, where there are many *Leaf Node* classifications with few data points in them.
+In the worst case, every single data point has its own classification.
+That wouldn't be very useful, now would it?
+
+
+#### 1.2.2) Overfitting
+Fragmentation can lead to the model fitting too closely, or even exactly, to its training data. [(IBM Research, 2026)](https://www.ibm.com/think/topics/overfitting)
+This is known as *overfitting*.
+It makes the model less useful for actually predicting things, because once it gets data points outside of the training data set, said predictions will be much less accurate.
+
+*Overfitting* can occur when the *Machine Learning model* trains for too long on some sample data, or is too complex.
+In these cases it "learns" the noise (i.e. irrelevant information) and makes it hard to generalize for new data.
+
+Some tell-tale signs of *overfitting* include:
+
+- low error rates
+- high variance
+
+One (1) way to check for *overfitting* is to use a subset of the training data set as a "test set".
+When the training data set has a low error rate but the test data set has a high error rate, this probably means *overfitting* occurred.
+
+
+### 1.3) Random Forest
+
+This is a form of *Bootstrap Aggregating*, also known as *Bagging*,
+which is an example of an *Ensemble Learning* method.
+
+
+#### 1.3.1) Bagging
+
+This is an *Ensemble Learning* method that aims to **reduce variance** within a "noisy" data set.
+[(IBM Research, 2026)](https://www.ibm.com/think/topics/bagging)
+
+Here, a sample of the training data set is taken with replacement- i.e. individual data points can be selected more than once.
+This continues until we have several samples, after which we train several independent weak models.
+We then get the *average* or *majority* of these weak models to yield more accurate estimates.
+
+There are three (3) basic steps to *Bagging*:
+
+##### 1.3.1.1) Bootstrapping
+Select data points at random, and with replacement.
+This ensures we have diverse samples.
+Note that, since this samples at random *with replacement*, then we are able to select the same data point multiple times in a sample.
+
+
+##### 1.3.1.2) Parallel training
+Bootstrapped samples are independently trained, and at the same time.
+
+##### 1.3.2.3) Aggregation
+Get the average or majority of the predictions, depending on the task at hand.
+
+For *Regression*, get the average of all outputs predicted by the individual trees.
+This process is known as *Soft Voting*.
+
+For *Classification*, get the class with the highest majority of votes.
+This process is known as *Hard Voting* or *Majority Voting*.
+
+
+#### 1.3.2) Random Forest
+
+Here, multiple independent decision trees are created and merged.
+The trees are independent in that they use unique subsets of the training data, and none of them will impact any other in any way.
+[(IBM Research, 2026)](https://www.ibm.com/think/topics/random-forest)
+
+Specifically, it is an extension of *Bagging* which creates an uncorrelated "forest" of *Decision Trees*.
+It requires *Feature Randomness* (a.k.a. *Feature Bagging*) to generate random subsets of features in order to ensure low correlation among the *Decision Trees*.
+
+*Decision Trees* consider all possible feature splits but *Random Forest* only selects a subset of those features.
+
+Three (3) main hyperparameters need to be set before training:
+
+1) Node size
+2) Number of trees
+3) Number of features sampled
+
+
+### 1.4) Gradient Boosting
+
+Like *Random Forest*, this is also an *Ensemble Learning* method that combines multiple *Decision Trees* into one (1) model.
+However, it uses the *Boosting* method rather than *Bagging*.
+
+
+#### 1.4.1) Boosting
+
+Recall that in *Bagging*, weak learners are independent but trained in parallel (i.e. at the same time).
+In *Boosting*, however, they are trained sequentially- i.e. one after the other.
+
+Here, a series of models in constructed.
+Each each new model iteration, the weights of the misclassified data from the previous are increased.
+The reason for this is that it helps the model identify which parameters it needs to focus on in order to improve its performance.
+
+Also, *Bagging* learners are weak, exhibiting high variance with low bias (i.e. low error rates).
+In *Boosting*, however, is often used when low variance and high bias is observed.
+
+
+#### 1.4.2) Gradient Boosting
+
+This is a form of *Boosting* where the residual errors of the previous model are corrected by the next model.
+[(IBM Research, 2026)](https://www.ibm.com/think/topics/bagging)
+
+It combines multiple weak prediction models into a single one, i.e. an "ensemble".
+These weak models are often *Decision Trees*.
+These *Decision Trees* are trained sequentially to minimize errors in order to improve accuracy.
+The combination of multiple decision tree regressors or classifiers helps capture complex relationships between features.
+
+The main benefit is to iteratively minimize the *Loss Function* to improve predictive accuracy.
+One (1) example of a *Loss Function* is *Mean Squared Error*, given by the formula:
+
+```
+MSE = SSE / n
+
+where
+
+SSE = 0
+for i in 1:n {
+    SSE += (y_i - p_i)^2
+}
+
+where
+
+y_i = actual value for observation i
+p_i = predicted value for observation i
+n   = number of observations
+```
+
+There are seven (7) steps to *Gradient Boosting*.
+
+##### 1.4.2.1) Initialization 
+
+##### 1.4.2.2) Calculating residuals
+
+Subtract predicted value from the actual value, for each training sample.
+This identifies the areas where the model predictions need improvement.
+
+##### 1.4.2.3) Refining with regularization
+##### 1.4.2.4) Training next model
+##### 1.4.2.5) Ensemble updates
+##### 1.4.2.6) Repetition
+##### 1.4.2.7) Stopping criteria
+
+### 1.5) Summary
+
+#### 1.5.1) Bagging vs. Boosting
+
+
+|                 | Bagging                   | Boosting              |
+|-----------------|---------------------------|-----------------------|
+| Model sequence  | Parallel, independent     | Sequential, dependent |
+| Variance        | High                      | Low                   |
+| Bias            | Low                       | High                  |
+| Computations    | Expensive                 | Efficient             |
+| Overfitting     | Avoids                    | Prone                 | 
+| Bias            | Prone                     | Reduces               |
+
+#### 1.5.2) Random Forest vs. Gradient Boosting
+
+|                 | Random Forest             | Gradient Boosting     |
+|-----------------|---------------------------|-----------------------|
+| Ensemble method | Bagging                   | Boosting              |
+
+---
+
+## 2) Then, similar to random forest, enumerate the implementation types of gradient boosting.
 Also provide a brief description of each.
 
-## Pick one (1) type of gradient boosting implementation.
+These are popular implementations of *Gradient Boosting* available for both Python and R.
+
+### 2.1) Extreme Gradient Boosting (XGBoost)
+
+[XGBoost](https://xgboost.readthedocs.io/) is an open-source library for *Gradient Boosting* which uses *Gradient Descent*.
+It is known for its speed, efficiency, and portability.
+Is is especially known for the ability to scale with large data sets.
+
+It is available for [Python](https://xgboost.readthedocs.io/en/stable/install.html#python), and [R](https://xgboost.readthedocs.io/en/stable/install.html#r).
+
+### 2.2) Light Gradient-Boosting Machine (LightGBM)
+
+[LightGBM](https://lightgbm.readthedocs.io/en/latest/index.html) is another open-source library for *Gradient Boosting* which uses *Gradient-based One-Side Sampling* (GOSS)
+[(IBM Research, 2026)](https://www.ibm.com/think/topics/gradient-boosting#179371087).
+
+It is best known for its suitability to large-scale data processing as GOSS reduces the computational resources needed by finding split points needed to filter out the data instances.
+    
+
+## 3) Pick one (1) type of gradient boosting implementation.
 Using AI, study the steps for implementing it.
 
-## Lastly, implement the steps manually in R without any packages.
-ruh roh raggy
+```{r lightgbm-installation}
+################################################################################
+## Installation
+##
+## https://lightgbm.readthedocs.io/en/latest/R/index.html#installing-the-cran-package
+################################################################################
+## install.packages("lightgbm", repos = "https://cran.r-project.org")
+library(lightgbm)
+```
+
+For training, we will be using the `agaricus.train` data set provided by the `lightgbm` package.
+Before we continue, it helps to understand what exactly the data set contains.
+
+It has two (2) parts: the data itself, the labels.
+
+1) `agaricus.train$data`
+A sparse matrix.
+Columns are various features of the *Agaricus sp.* mushroom.
+Rows are the integers 0 or 1 indicating the presence of said feature.
+
+For example, a particular mushroom may have `cap-shape=bell` set to `0` to indicate its cap shape is not a bell.
+All columns of the name `cap-shape=*`, except for one (1), should be set to `0`.
+Only a single `cap-shape=*` should be set to `1`.
+Think about it, how could a mushroom be simultanously bell-shaped and flat, for example?
+
+Because of the data's binary nature, we should use binary methods.
+
+2) `agaricus.train$label`
+A vector of 0's or 1's indicating whether the indexed mushroom is edible or not.
+
+
+```{r lightgbm-training}
+################################################################################
+## 1) Basic Training
+##
+## https://github.com/lightgbm-org/LightGBM/blob/main/R-package/demo/basic_walkthrough.R
+################################################################################
+data(agaricus.train, package = "lightgbm")
+data(agaricus.test,  package = "lightgbm")
+
+dtrain <- lgb.Dataset(agaricus.train$data, label = agaricus.train$label)
+dtest  <- lgb.Dataset.create.valid(dtrain,
+    data  = agaricus.test$data,
+    label = agaricus.test$label)
+
+train_params <- list(num_leaves = 4L,
+    learning_rate = 1.0,
+    objective     = "binary", # default: "regression"
+    nthread       = 2L)
+
+
+bst1 <- lightgbm(data = dtrain,
+    params  = train_params,
+    nrounds = 2L,
+    ## 0 = no message
+    ## 1 = print evaluation metric
+    ## 2 = print evaluation metric and information about tree
+    verbose = 2L)
+
+################################################################################
+## 2) Basic Prediction
+################################################################################
+pred1 <- stats::predict(bst1, agaricus.test$data)
+err1  <- mean(as.numeric(pred1 > 0.5) != agaricus.test$label)
+err1
+```
+
+```{r lightgbm-validation}
+################################################################################
+## 3) Validation
+################################################################################
+valids <- list(train = dtrain, test = dtest)
+
+## `eval` is optional if you want to change the evaluation metrics.
+bst2 <- lgb.train(train_params, dtrain,
+    nrounds = 2L,
+    valids  = valids,
+    eval    = c("binary_error", "binary_logloss"), # default: NULL (regression)
+    verbose = 2L
+)
+
+label <- lightgbm::get_field(dtest, "label")
+pred2 <- stats::predict(bst2, agaricus.test$data)
+err2  <- as.numeric(sum(as.integer(pred2 > 0.5) != label)) / length(label)
+err2
+```
+
+```{r lightgbm-boosting-prediction}
+################################################################################
+## LightGBM: Boosting from an initial base prediction
+################################################################################
+valids <- list(eval = dtrain, test = dtest)
+
+## Start from an initial base prediction
+bst3 <- lgb.train(train_params, dtrain, verbose = 1L, valids = valids)
+
+## We need the margin value instead of the transformed prediction as in
+## `set_init_score`.
+ptrain <- stats::predict(bst3, agaricus.train$data, type = "raw")
+ptest  <- stats::predict(bst3, agaricus.test$data,  type = "raw")
+
+lightgbm::set_field(dtrain, "init_score", ptrain)
+lightgbm::set_field(dtest,  "init_score", ptest)
+
+## Result of boost from initial prediction
+bst4 <- lgb.train(train_params,
+    data    = dtrain,
+    nrounds = 5L,
+    valids  = valids)
+
+pred3 <- stats::predict(bst4, agaricus.test$data)
+err3  <- mean(as.numeric(pred3 > 0.5) != agaricus.test$label)
+err3
+```
+
+
+## 4) Lastly, implement the steps manually in R without any packages.
+
+```{r initialization}
+## https://kuriko-iwai.com/research/gradient-boosting-machines-explained
+fuck <- function(x, y, num_trees = 100L, learning_rate = 0.1, max_depth = 3) {
+    ## Initial prediction is based on the mean of the target values.
+    y_bar <- mean(y)
+    
+    ## Initial prediction vector. 
+    F_0 <- log(y_bar / (1 - y_bar))
+    F_m <- rep(F_0, len(y))
+    for (i in 1:num_trees) {
+        ## Compute residuals.
+        p   <- exp(F_m) / (1 + exp(F_m))
+        rho <- y - p
+    }
+}
+```

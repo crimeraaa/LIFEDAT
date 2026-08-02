@@ -192,13 +192,13 @@ vprint <- function(..., sep = " ") print(paste(..., sep=sep))
 ################################################################################
 bootstrap_sample <- function(data_df, n) {
     ## Take a sample from the input vector, of specified size, with replacement.
-    boot_index   <- sample(1:n, size=n, replace=TRUE)
+    boot_index   <- sample(1:n, size = n, replace = TRUE)
     boot_data_df <- data_df[boot_index, ]
     
     ## Out-of-bag observations
     ## `setdiff` is the difference between the two (2) sets.
     oob_index <- setdiff(1:n, unique(boot_index))
-    return(list(data_df=boot_data_df, oob_index=oob_index))
+    return(list(data_df = boot_data_df, oob_index = oob_index))
 }
 
 
