@@ -258,7 +258,7 @@ Because of the data's binary nature, we should use binary methods.
 A vector of 0's or 1's indicating whether the indexed mushroom is edible or not.
 
 
-```{r lightgbm-training}
+```{r lightgbm-training, warning = FALSE}
 ################################################################################
 ## 1) Basic Training
 ##
@@ -273,26 +273,30 @@ dtest  <- lgb.Dataset.create.valid(dtrain,
     label = agaricus.test$label)
 
 train_params <- list(num_leaves = 4L,
-    learning_rate = 1.0,
-    objective     = "binary", # default: "regression"
-    nthread       = 2L)
+    learning_rate    = 1.0,
+    objective        = "binary", # default: "regression"
+    min_data_in_leaf = 10L)
 
 
+## May give a warning from `.get_default_num_threads()` when package
+## `RhcpBLASctl` is not installed. It's optional, so nothing should break.
 bst1 <- lightgbm(data = dtrain,
     params  = train_params,
     nrounds = 2L,
-    ## 0 = no message
-    ## 1 = print evaluation metric
-    ## 2 = print evaluation metric and information about tree
-    verbose = 2L)
+    ## -1 = no info/debug/warning messages
+    ##  0 = no info/debug messaages, still prints warnings
+    ##  1 = print evaluation metric
+    ##  2 = print evaluation metric and information about tree
+    verbose = -1L)
 
 ################################################################################
 ## 2) Basic Prediction
 ################################################################################
 pred1 <- stats::predict(bst1, agaricus.test$data)
-err1  <- mean(as.numeric(pred1 > 0.5) != agaricus.test$label)
-err1
+err1  <- mean(as.integer(pred1 > 0.5) != agaricus.test$label)
 ```
+
+Based on the above, the test data's predicted error rate is `r err1`.
 
 ```{r lightgbm-validation}
 ################################################################################
@@ -305,14 +309,15 @@ bst2 <- lgb.train(train_params, dtrain,
     nrounds = 2L,
     valids  = valids,
     eval    = c("binary_error", "binary_logloss"), # default: NULL (regression)
-    verbose = 2L
+    verbose = -1L
 )
 
 label <- lightgbm::get_field(dtest, "label")
 pred2 <- stats::predict(bst2, agaricus.test$data)
 err2  <- as.numeric(sum(as.integer(pred2 > 0.5) != label)) / length(label)
-err2
 ```
+
+Based on the above, the validated error rate is `r err2`.
 
 ```{r lightgbm-boosting-prediction}
 ################################################################################
@@ -321,7 +326,7 @@ err2
 valids <- list(eval = dtrain, test = dtest)
 
 ## Start from an initial base prediction
-bst3 <- lgb.train(train_params, dtrain, verbose = 1L, valids = valids)
+bst3 <- lgb.train(train_params, dtrain, verbose = -1L, valids = valids)
 
 ## We need the margin value instead of the transformed prediction as in
 ## `set_init_score`.
@@ -335,29 +340,154 @@ lightgbm::set_field(dtest,  "init_score", ptest)
 bst4 <- lgb.train(train_params,
     data    = dtrain,
     nrounds = 5L,
-    valids  = valids)
+    valids  = valids,
+    verbose = -1L)
 
-pred3 <- stats::predict(bst4, agaricus.test$data)
-err3  <- mean(as.numeric(pred3 > 0.5) != agaricus.test$label)
-err3
+pred_vec <- stats::predict(bst4, agaricus.test$data)
+err3     <- mean(as.numeric(pred_vec > 0.5) != agaricus.test$label)
 ```
+
+Based on the above, the error rate from boosting with an initial base prediction is `r err3`.
 
 
 ## 4) Lastly, implement the steps manually in R without any packages.
 
-```{r initialization}
-## https://kuriko-iwai.com/research/gradient-boosting-machines-explained
-fuck <- function(x, y, num_trees = 100L, learning_rate = 0.1, max_depth = 3) {
-    ## Initial prediction is based on the mean of the target values.
-    y_bar <- mean(y)
+### 4.1) Clean up the data
+```{r manual-gradient-boosting-init}
+data(penguins)
+
+## Remove incomplete data rows.
+clean_penguin_df <- na.omit(penguins)
+
+## Randomize all rows, and split them for testing and training.
+set.seed(69420)
+random_penguin_df <- clean_penguin_df[clean_penguin_df |> nrow() |> sample(), ]
+
+## Number of observations in the original, full data.
+n <- nrow(random_penguin_df)
+
+## Parition data set into the first 70% (training) and the last 30% (test).
+ofs           <- as.integer(n * 0.7)
+train_penguin <- random_penguin_df[1:ofs, ]
+
+## Order of operations! `ofs + 1:n` is parsed as `ofs + (1:n)`.
+test_penguin  <- random_penguin_df[(ofs + 1):n, ]
+```
+
+### 4.2) Assign the variables
+```{r manual-gradient-boosting-assign}
+make_df <- function(x_df, y_vec) {
+    return(data.frame(Body_Mass = y_vec,
+        Bill_Length    = x_df$bill_len,
+        Bill_Depth     = x_df$bill_dep,
+        Flipper_Length = x_df$flipper_len))
+}
+
+## Our training predictors.
+x_df <- train_penguin[, c("bill_len", "bill_dep", "flipper_len")]
+
+## Our training response variable.
+y_vec <- train_penguin$body_mass
+
+## Number of observations in the training data.
+n <- nrow(train_penguin)
+
+## Out training data frame for gradient boosting.
+mgb_df <- make_df(x_df, y_vec)
+
+## Our initial prediction is just the mean repeated n times.
+pred0         <- mean(y_vec)
+pred_curr_vec <- rep(pred0, n)
+```
+
+
+### 4.3) Gradient Boosting loop
+First, we need to construct the trees.
+```{r manual-gradient-boosting-loop-create-trees}
+## 100 is often used, but you can decrease this to reduce computational
+## complexity at the cost of accuracy.
+n_trees <- 50
+
+## 10% is often used.
+learning_rate <- 0.1
+
+## List of trees.
+models_vec <- list()
+for (i in 1:n_trees) {
+    ##Residual for each row
+    mgb_df$Residuals <- mgb_df$Body_Mass - pred_curr_vec
     
-    ## Initial prediction vector. 
-    F_0 <- log(y_bar / (1 - y_bar))
-    F_m <- rep(F_0, len(y))
-    for (i in 1:num_trees) {
-        ## Compute residuals.
-        p   <- exp(F_m) / (1 + exp(F_m))
-        rho <- y - p
-    }
+    ## Note that this assumes the formula variables are also column names.
+    int_tree <- lm(Residuals ~ Bill_Length + Bill_Depth + Flipper_Length,
+        data = mgb_df)
+    
+    ## Delegates to `stats::predict.lm()`.
+    pred_next_vec <- predict(int_tree, newdata = mgb_df)
+    
+    ## Update the predictions, scaled by the learning rate.
+    pred_curr_vec   <- pred_curr_vec + (learning_rate * pred_next_vec)
+    models_vec[[i]] <- int_tree
 }
 ```
+
+
+Now we can combine the trees, sequentially, to predict the data.
+```{r manual-gradient-boosting-loop-predict-data}
+mgb_predict <- function(new_data_df, models_vec, pred0, learning_rate) {
+    n        <- nrow(new_data_df)
+    pred_vec <- rep(pred0, n)
+    for (model in models_vec) {
+        ## Delegates to `stats::predict.lm()`.
+        predN    <- predict(model, newdata = new_data_df)
+        pred_vec <- pred_vec + (learning_rate * predN)
+    }
+    return(pred_vec)
+}
+
+final_pred_vec <- mgb_predict(mgb_df, models_vec, pred0, learning_rate)
+```
+
+```{r echo = FALSE}
+## How many elements from both the head and the tail to dump.
+n_end <- 4L
+```
+
+We can now compare what the training data predicted to the actual body mass.
+Here are the first `r n_end` and last `r n_end` elements for brevity.
+```{r echo = FALSE}
+gb_dump <- function(pred_vec, actual_df) {
+    tmp_df <- data.frame(Predicted = pred_vec, Actual = actual_df)
+    n      <- nrow(tmp_df)
+    heads  <- 1:n_end
+    tails  <- (n - n_end):n
+    knitr::kable(tmp_df[union(heads, tails), ], align = 'l')
+}
+
+gb_dump(final_pred_vec, y_vec)
+```
+
+
+### 4.4) Training on the new data set
+```{r manual-gradient-boosting-loop-train-new}
+## Our test predictors.
+x2_df  <- test_penguin[, c("bill_len", "bill_dep", "flipper_len")]
+
+## Our test response.
+y2_df  <- test_penguin$body_mass
+
+## Number of test observations.
+n2     <- nrow(test_penguin)
+
+## Our test data frame for gradient boosting.
+mgb2_df <- make_df(x2_df, y2_df)
+
+final_pred2_vec <- mgb_predict(mgb2_df, models_vec, mean(y2_df), learning_rate)
+```
+
+Let's compare the first `r n_end` and last `r n_end` predicted test data points to their actual values.
+```{r echo = FALSE}
+gb_dump(final_pred2_vec, y2_df)
+```
+
+Notice how the predicted values for both the training and test data sets are very different from their actual values.
+This indicates that the penguin's bill length, bill depth, and flipper length are not accurate markers for tis overall body mass across different species.
