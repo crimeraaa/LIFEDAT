@@ -1,6 +1,7 @@
 *.Rdata
 *.Rhistory
 *.pdf
+*.pptx
 *.doc*
 *.png
 *.jpg
