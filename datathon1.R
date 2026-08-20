@@ -1,51 +1,193 @@
-library(dplyr)
 library(ggplot2)
+library(dplyr)
+library(sf)
+library(terra)
 
+
+################################################################################
+## Common stuff
+################################################################################
+
+## Clear the environment for reproducability.
 rm(list = ls())
 
-## 1) Read in the damned data.
-bird_df <- read.delim("data/Rhipidura_nigritorquis.csv")
-
-## Get only the years and coordinates, tossing out all NAs.
-raw_line_df <- bird_df |>
-    dplyr::select(year, decimalLatitude:decimalLongitude) |>
-    na.omit(raw_line_df) |>
-    dplyr::arrange(year)
+## 1) Read in the administrative boundary data. This will allow us to 'extract'
+##    only the Philippines from the world map raster later on and also filter
+##    out occurrences that go beyond the Philippines' extent.
+PH_sf  <- sf::st_read("data/PHL_adm/PHL_adm0.shp")
+PH_ext <- terra::ext(PH_sf)
 
 
-## A sequence of all the years we care about. Since the raw data frame is sorted
-## in ascending order, we can assume the range is at the lowest/highest indexes.
-years   <- raw_line_df$year[1]:tail(raw_line_df$year, n = 1L)
-bastard <- vector("numeric", length(years))
-
-
-## Map some values to the years 1858:2026, but use 1-based indexes for simplicity
-line_df <- data.frame(Year = years,
-    Count     = bastard,
-    Latitude  = bastard,
-    Longitude = bastard,
-    Elevation = bastard)
-
-
-for (curr_year in years) {
-    ## Format:
-    ##  | <index> | $ year | $ decimalLatitude | $ decimalLongitude |
-    ##  |---------|--------|-------------------|--------------------|
-    ##  |       1 |   1858 |              -7.4 |                110 |
-    ##  |  <nrow> |   1858 |              -6.7 |                6.9 |
-    curr_year_df <- dplyr::filter(raw_line_df, year == curr_year)
-    curr_count   <- nrow(curr_year_df) ## Occurrence count for this year
+## 2) Read in the occurrence data.
+##
+##    For (A), the double-line graph, we only care about the overall counts per
+##    year and the mean elevation. Said elevation will have to be extrapolated
+##    from the WorldClim data and each occurrence's coordinates.
+##
+bird_df <- utils::read.delim("data/Rhipidura_nigritorquis.csv") |>
+    ## 2.1) Rename the columns for ease of use. These are just my (Jerome's)
+    ##      personal preferences. Just be consistent.
+    dplyr::rename(Year      = year,
+                  Latitude  = decimalLatitude,
+                  Longitude = decimalLongitude) |>
     
-    ## Actual index is offset by whatever the first year is, e.g. 1858
-    i <- curr_year - years[1]
+    ## 2.2) Between the double-line graph and the occurrence map, we only
+    ##      need the years and coordinates.
+    dplyr::select(Year, Latitude:Longitude) |>
     
-    ## Yay printf debugging! Right-align the bastards
-    # print(sprintf("i = %3i, curr_year = %4i, curr_count = %4i",
-    #     i, curr_year, curr_count))
+    ## 2.1) Ensure all the coordinates are in range of the country's extent.
+    ##      This will also filter out NA's.
+    dplyr::filter(dplyr::between(Longitude, PH_ext$xmin, PH_ext$xmax),
+                  dplyr::between(Latitude,  PH_ext$ymin, PH_ext$ymax)) |>
+    
+    ## 2.2) Remove occurrences without tagged years so we can safely treat
+    ##      the entire column as an integer vector.
+    dplyr::filter_out(is.na(Year)) |>
+    dplyr::arrange(Year) ## Ascending order.
 
-    line_df$Count[i]     <- curr_count
-    line_df$Latitude[i]  <- mean(curr_year_df$decimalLatitude)
-    line_df$Longitude[i] <- mean(curr_year_df$decimalLongitude)
+
+## 2.3) For (B), we only care about each occurrence's coordinates.
+bird_map_df  <- dplyr::select(bird_df, !Year)
+
+
+## 3) A lot is happening here. We read in the raster of the world map but
+##    specifically extract the section that belongs to the Philippines' extent.
+PH_elev_spatr <-
+    terra::rast("data/wc2.1_2.5m_elev.tif") |>
+    terra::crop(PH_sf) |>
+    terra::mask(PH_sf)
+
+
+## 4) There's only one (1) name - Band_1. This is actually the elevation,
+##    which is also our demarcation data. Rename it to better reflect its
+##    intended meaning and usage for succeeding steps.
+names(PH_elev_spatr) <- "Elevation"
+
+
+################################################################################
+## A. Philippine Pied Fantail Annual Observations along Elevation
+################################################################################
+
+## A1) Translate Latitude and Longitude to raster points. Don't include years.
+bird_epsg_sf <- bird_map_df |>
+    ## `coords` must be in x-y order, for `terra::extract()`.
+    ## `crs` is actually passed onto `sf::st_sf()`. See `?st_crs`.)
+    sf::st_as_sf(coords = c("Longitude", "Latitude"), crs = "EPSG:4326")
+
+
+## A2) We can now get the elevation data for each occurrence. Some occurrences
+##     may result in NA- don't remove them just yet so that this has the same
+##     row count as the others and can be bound.
+bird_elev_df <- terra::extract(PH_elev_spatr, bird_epsg_sf)
+
+
+## A3) With that, we can combine the above data frames. In the previous step
+##     we noted that some elevations would be NA- so remove them only after
+##     the full data frame is created.
+bird_graph_df <- cbind(bird_df, bird_epsg_sf, bird_elev_df) |> stats::na.omit()
+
+
+## A4) Prepare the line graph data frame. See the succeeding sub-steps.
+first_year <- min(bird_graph_df$Year)
+last_year  <- max(bird_graph_df$Year)
+
+
+## A4.1) An ordered sequence, in ascending order of all possible years that the
+##       occurrence data could span. Not all years in this sequence are
+##       necessarily in the actual data.
+years_seq <- first_year:last_year
+
+
+## A4.2) Maps each possible year to some total count and mean elevation.
+##      By default all the counts and means are zero (0), which is useful for
+##      years that have no recorded occurrences.
+year_sum_elev <- data.frame(
+    Year  = years_seq,
+    Count = vector("numeric", length(years_seq)),
+    Mean  = vector("numeric", length(years_seq)))
+
+
+## A5) Fill in the line graph data frame.
+for (i in years_seq) {
+    ## A5.1) Normalize the year to a 1-based row index such that the first year,
+    ##       which is 1902, maps to index 1, rather than 0.
+    row_index <- i - first_year + 1
     
-    ## TODO: uhh... umm...
+    ## A5.2) Let dplyr handle the dirty work of searching for all occurrences
+    ##       from this year. Note that the call will always return a proper
+    ##       data frame, though it could be empty (i.e. #rows == 0).
+    tmp_vect  <- dplyr::filter(bird_graph_df, Year == i)$Elevation
+    
+    ## A5.3) Since the found data frame could be empty, avoid getting a mean
+    ##       of NaN. Recall that we already treat no occurrences as zero (0).
+    n <- length(tmp_vect)
+    if (n > 0) {
+        year_sum_elev[row_index, c("Count", "Mean")] <- c(n, mean(tmp_vect))
+    }
 }
+
+## A6) Plot the double-line graph.
+ggplot2::ggplot(year_sum_elev) +
+    ## A6.1) Primary plot (i.e. y-axis on the left) Based on the reference, this
+    ##       will be the total counts per year.
+    ggplot2::geom_col(
+        mapping   = ggplot2::aes(Year, Count),
+        colour    = "black",     ## Outline color.
+        fill      = "#4077A5") + ## Shape fill color.
+
+    ## A6.2) Primary plot's labels.
+    ggplot2::labs(
+        title = "A. Philippine Pied Fantail Annual Observations along Elevation",
+        x     = "Year",
+        y     = "Number of Observations") +
+
+    ## A6.?) Finalization. This forgoes the gray-ish background and grid lines.
+    ggplot2::theme_classic()
+
+
+################################################################################
+## B. Philippine Pied Fantail Occurrence Records
+################################################################################
+stop("address me")
+
+## B1) Set up the elevation scale gradient, from lowest to highest values.
+##    Cherry-picking courtesy of: Thoms.
+gradient_vect <- c("#f1f1f1", "#ffc59e", "#e1bb4e", "#9bb306", "#26a63a")
+
+
+## B2) Plot DEM. There are a lot of sub-steps here, so see each one's comment.
+ggplot2::ggplot(terra::as.data.frame(PH_elev_spatr, xy = TRUE)) +
+    ggplot2::geom_tile(aes(x, y, fill = Elevation)) +
+
+    ## B2.1) Change color manually, with a discrete color legend such that the
+    ##       color of the lowest point goes on top and the color of the highest
+    ##       possible point goes on the bottom.
+    ggplot2::scale_fill_stepsn(
+        name   = "Elevation (m)",
+        colors = gradient_vect,
+        guide  = "legend") +
+    
+    ## B2.2) Draw the land boundaries.
+    ggplot2::geom_sf(
+        data  = PH_sf, ## Administrative boundary data.
+        fill  = NA,    ## Don't color inside each boundary!
+        color = "black") +
+  
+    ## B2.3) Plot the occurrence sampling points as well.
+    ggnewscale::new_scale_fill() +
+    ggplot2::geom_point(
+        data    = bird_map_df, ## Override the implicit argument!
+        mapping = aes(Longitude, Latitude),
+        shape   = 21,
+        colour  = "black", ## Outline color
+        fill    = "red",   ## Color *inside* the point
+        size    = 2.5,
+        stroke  = 1.0) +
+    
+    ## B2.4) Finalization. Unlike in GIS, don’t use `ggplot2::coord_equal()`
+    ##       since we now have administrative boundary lines to worry about.
+    ggplot2::coord_sf() +
+    ggplot2::labs(title = "B. Philippine Pied Fantail Occurrence Records",
+                  x     = "Longitude",
+                  y     = "Latitude") +
+    ggplot2::theme_classic()
