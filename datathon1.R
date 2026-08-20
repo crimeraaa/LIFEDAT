@@ -75,9 +75,8 @@ bird_epsg_sf <- bird_map_df |>
     sf::st_as_sf(coords = c("Longitude", "Latitude"), crs = "EPSG:4326")
 
 
-## A2) We can now get the elevation data for each occurrence. Some occurrences
-##     may result in NA- don't remove them just yet so that this has the same
-##     row count as the others and can be bound.
+## A2) We can now get the elevation data for each occurrence. Note that some
+##     occurrences may result in NA.
 bird_elev_df <- terra::extract(PH_elev_spatr, bird_epsg_sf)
 
 
@@ -101,7 +100,7 @@ years_seq <- first_year:last_year
 ## A4.2) Maps each possible year to some total count and mean elevation.
 ##      By default all the counts and means are zero (0), which is useful for
 ##      years that have no recorded occurrences.
-year_sum_elev <- data.frame(
+bird_line_df <- data.frame(
     Year  = years_seq,
     Count = vector("numeric", length(years_seq)),
     Mean  = vector("numeric", length(years_seq)))
@@ -118,31 +117,64 @@ for (i in years_seq) {
     ##       data frame, though it could be empty (i.e. #rows == 0).
     tmp_vect  <- dplyr::filter(bird_graph_df, Year == i)$Elevation
     
-    ## A5.3) Since the found data frame could be empty, avoid getting a mean
-    ##       of NaN. Recall that we already treat no occurrences as zero (0).
+    ## A5.3) Since the found data frame could be empty, our mean may be NaN.
     n <- length(tmp_vect)
     if (n > 0) {
-        year_sum_elev[row_index, c("Count", "Mean")] <- c(n, mean(tmp_vect))
+        y_bar <- mean(tmp_vect)
+        bird_line_df[row_index, c("Count", "Mean")] <- c(n, y_bar)
     }
 }
 
 ## A6) Plot the double-line graph.
-ggplot2::ggplot(year_sum_elev) +
+MEAN_ELEV_SCALE <- 5.75
+ggplot2::ggplot(dplyr::filter_out(bird_line_df, Mean == 0.0)) +
     ## A6.1) Primary plot (i.e. y-axis on the left) Based on the reference, this
     ##       will be the total counts per year.
     ggplot2::geom_col(
-        mapping   = ggplot2::aes(Year, Count),
-        colour    = "black",     ## Outline color.
-        fill      = "#4077A5") + ## Shape fill color.
+        ggplot2::aes(Year, Count),
+        colour = "black",
+        fill = "#0477A5") +
+    
+    ## A6.2) Secondary plot (i.e. y-axis on the right) data. Based on the
+    ##       reference, this will be the mean elevation. Note that because
+    ##       ggplot2 doesn't actually support two (2) *independent* y-axes,
+    ##       we need to scale the secondary y-axis to the primary one instead.
+    ggplot2::geom_point(
+        mapping = ggplot2::aes(Year, Mean * MEAN_ELEV_SCALE),
+        shape   = 21,    ## Circle.
+        size    = 2.0,
+        colour  = "red",
+        fill    = "red") +
 
-    ## A6.2) Primary plot's labels.
+    ggplot2::geom_line(
+        mapping   = ggplot2::aes(Year, Mean * MEAN_ELEV_SCALE),
+        colour    = "red",
+        linewidth = 1.25) +
+    
+    ## A6.3) Primary plot's x-axis and y-axis labels.
     ggplot2::labs(
         title = "A. Philippine Pied Fantail Annual Observations along Elevation",
         x     = "Year",
         y     = "Number of Observations") +
+    
+    ## A6.4) Primary and secondary plot's shared x-axis. As in the reference
+    ##       plot, we start from 1902 and increment by 10 years.
+    ggplot2::scale_x_continuous(breaks = seq(first_year, last_year, by = 10)) +
+    
+    ## A6.4) Secondary plot's y-axis labels. Again, as the secondary y-axis
+    ##       is *not* independent of the primary one, we need to scale it
+    ##       appropriately.
+    ggplot2::scale_y_continuous(
+        sec.axis = ggplot2::sec_axis(
+            transform = ~ . / MEAN_ELEV_SCALE,
+            name      = "Mean Elevation (m)")) +
 
     ## A6.?) Finalization. This forgoes the gray-ish background and grid lines.
-    ggplot2::theme_classic()
+    ggplot2::theme_classic() +
+    
+    ## Adjust the x-axis tick labels so that they are rotated by 45 degrees
+    ## and horizontally justified from the tick.
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
 
 
 ################################################################################
