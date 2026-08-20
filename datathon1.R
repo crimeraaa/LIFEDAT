@@ -1,5 +1,6 @@
 library(ggplot2)
 library(dplyr)
+library(patchwork)
 library(sf)
 library(terra)
 
@@ -127,7 +128,7 @@ for (i in years_seq) {
 
 ## A6) Plot the double-line graph.
 MEAN_ELEV_SCALE <- 5.75
-ggplot2::ggplot(dplyr::filter_out(bird_line_df, Mean == 0.0)) +
+bird_line_plot <- ggplot2::ggplot(dplyr::filter_out(bird_line_df, Mean == 0.0)) +
     ## A6.1) Primary plot (i.e. y-axis on the left) Based on the reference, this
     ##       will be the total counts per year.
     ggplot2::geom_col(
@@ -180,7 +181,7 @@ ggplot2::ggplot(dplyr::filter_out(bird_line_df, Mean == 0.0)) +
 ################################################################################
 ## B. Philippine Pied Fantail Occurrence Records
 ################################################################################
-stop("address me")
+
 
 ## B1) Set up the elevation scale gradient, from lowest to highest values.
 ##    Cherry-picking courtesy of: Thoms.
@@ -188,7 +189,7 @@ gradient_vect <- c("#f1f1f1", "#ffc59e", "#e1bb4e", "#9bb306", "#26a63a")
 
 
 ## B2) Plot DEM. There are a lot of sub-steps here, so see each one's comment.
-ggplot2::ggplot(terra::as.data.frame(PH_elev_spatr, xy = TRUE)) +
+bird_map_plot <- ggplot2::ggplot(terra::as.data.frame(PH_elev_spatr, xy = TRUE)) +
     ggplot2::geom_tile(aes(x, y, fill = Elevation)) +
 
     ## B2.1) Change color manually, with a discrete color legend such that the
@@ -223,3 +224,6 @@ ggplot2::ggplot(terra::as.data.frame(PH_elev_spatr, xy = TRUE)) +
                   x     = "Longitude",
                   y     = "Latitude") +
     ggplot2::theme_classic()
+
+bird_patchwork <- bird_line_plot + bird_map_plot
+bird_patchwork
